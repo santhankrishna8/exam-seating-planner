@@ -38,9 +38,16 @@ import { firstValueFrom } from 'rxjs';
                 <label class="form-label">Exam Name *</label>
                 <input class="form-control" [(ngModel)]="form.name" placeholder="Data Structures – Mid 1" />
               </div>
-              <div class="form-group">
-                <label class="form-label">Subject Code</label>
-                <input class="form-control" [(ngModel)]="form.subjectCode" placeholder="CS301" />
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Subject Code</label>
+                  <input class="form-control" [(ngModel)]="form.subjectCode" placeholder="CS301" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Department</label>
+                  <input class="form-control" [(ngModel)]="form.department" placeholder="Computer Science" />
+                  <span class="form-hint">Invigilators of this department are avoided.</span>
+                </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
@@ -77,6 +84,11 @@ import { firstValueFrom } from 'rxjs';
                   <span class="toggle-sub text-muted">Skip alternate seats on each bench (halves capacity).</span>
                 </span>
               </label>
+              <div class="form-group mt-16">
+                <label class="form-label">Invigilators per room</label>
+                <input class="form-control" type="number" min="1" max="5" [(ngModel)]="form.teachersPerRoom" />
+                <span class="form-hint">Used when you auto-allot teachers on the exam page.</span>
+              </div>
             </div>
           </div>
 
@@ -228,8 +240,8 @@ export class ExamCreateComponent implements OnInit {
   selectedRooms: Set<string> = new Set();
 
   form = {
-    name: '', subjectCode: '', date: '', startTime: '09:00', endTime: '12:00',
-    shuffleMode: 'sequential' as ShuffleMode, spacing: false
+    name: '', subjectCode: '', department: '', date: '', startTime: '09:00', endTime: '12:00',
+    shuffleMode: 'sequential' as ShuffleMode, spacing: false, teachersPerRoom: 1
   };
 
   modeHint = () => ({
@@ -274,11 +286,13 @@ export class ExamCreateComponent implements OnInit {
     this.form = {
       name: exam.name,
       subjectCode: exam.subjectCode ?? '',
+      department: exam.department ?? '',
       date: this.toDateInput(exam.date),
       startTime: exam.startTime || '09:00',
       endTime: exam.endTime || '12:00',
       shuffleMode: exam.shuffleMode,
-      spacing: exam.spacing
+      spacing: exam.spacing,
+      teachersPerRoom: exam.teachersPerRoom || 1
     };
     this.selectedRooms = new Set(exam.selectedRooms);
     this.existingStudents.set(students.length);
@@ -322,16 +336,20 @@ export class ExamCreateComponent implements OnInit {
     const payload = {
       name: this.form.name,
       subjectCode: this.form.subjectCode,
+      department: this.form.department,
       date: new Date(this.form.date),
       startTime: this.form.startTime,
       endTime: this.form.endTime,
       shuffleMode: this.form.shuffleMode,
       spacing: this.form.spacing,
+      teachersPerRoom: Math.max(1, Number(this.form.teachersPerRoom) || 1),
       selectedRooms: Array.from(this.selectedRooms)
     };
 
     try {
       if (this.editing()) {
+        // Note: invigilators map is preserved (not in payload) so editing here
+        // never wipes an existing duty roster.
         await this.examService.updateExam(this.examId, payload);
         if (this.students().length > 0) {
           await this.examService.saveStudents(this.examId, this.students());
@@ -339,7 +357,7 @@ export class ExamCreateComponent implements OnInit {
         this.toastService.success('Exam updated.');
         this.router.navigate(['/admin/exams', this.examId]);
       } else {
-        const examId = await this.examService.createExam({ ...payload, status: 'draft' });
+        const examId = await this.examService.createExam({ ...payload, status: 'draft', invigilators: {} });
         if (this.students().length > 0) {
           await this.examService.saveStudents(examId, this.students());
         }

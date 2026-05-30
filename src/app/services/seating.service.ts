@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Room } from '../models/room.model';
+import { Room, roomRowLayout } from '../models/room.model';
 import { Student } from '../models/student.model';
 import { ShuffleMode } from '../models/exam.model';
 
@@ -42,13 +42,16 @@ export class SeatingService {
     // when spacing is on, so neighbours aren't shoulder-to-shoulder).
     outer:
     for (const room of rooms) {
-      const benchesPerRow = room.benchesPerRow || Math.ceil(room.benchCount / (room.rowsCount || 1));
-      const rowsCount = room.rowsCount || Math.ceil(room.benchCount / benchesPerRow);
+      const layout = roomRowLayout(room);           // benches in each row (uneven-aware)
+      const maxCols = layout.length ? Math.max(...layout) : 0;
+      const prefix: number[] = [];                  // bench-number offset where each row begins
+      let acc = 0;
+      for (let r = 0; r < layout.length; r++) { prefix[r] = acc; acc += layout[r]; }
 
-      for (let c = 0; c < benchesPerRow; c++) {
-        for (let r = 0; r < rowsCount; r++) {
-          const bench = r * benchesPerRow + c + 1;
-          if (bench > room.benchCount) continue;
+      for (let c = 0; c < maxCols; c++) {
+        for (let r = 0; r < layout.length; r++) {
+          if (c >= layout[r]) continue;             // this row is shorter than column c
+          const bench = prefix[r] + c + 1;
           for (let seat = 1; seat <= room.seatsPerBench; seat += seatStep) {
             if (idx >= ordered.length) break outer;
             assigned.push({ ...ordered[idx], assignedRoom: room.id, assignedBench: bench, assignedSeat: seat, isSeated: true });

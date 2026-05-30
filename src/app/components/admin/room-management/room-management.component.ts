@@ -7,7 +7,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { RoomService } from '../../../services/room.service';
 import { ToastService } from '../../../services/toast.service';
-import { Room } from '../../../models/room.model';
+import { Room, roomRowLayout } from '../../../models/room.model';
 
 const FLOOR_OPTIONS = [
   'Ground Floor', '1st Floor', '2nd Floor', '3rd Floor',
@@ -85,9 +85,18 @@ function formatFloor(floor: string): string {
                 </div>
               </div>
 
+              <div class="form-group">
+                <label class="form-label">Uneven layout (optional)</label>
+                <input class="form-control" [(ngModel)]="form.rowLayoutText" placeholder="e.g. 6,6,5,4" />
+                <span class="form-hint">
+                  Comma-separated benches per row for halls where rows differ. Overrides "Benches per row".
+                  @if (layoutError()) { <span class="text-danger"> · {{ layoutError() }}</span> }
+                </span>
+              </div>
+
               <div class="capacity-preview">
-                <span>Layout: <strong>{{ form.rowsCount }} rows × {{ form.benchesPerRow }} benches × {{ form.seatsPerBench }} seats</strong></span>
-                <span class="cap-total">Total Capacity: <strong>{{ form.rowsCount * form.benchesPerRow * form.seatsPerBench }}</strong> students</span>
+                <span>Layout: <strong>{{ layoutLabel() }}</strong></span>
+                <span class="cap-total">Total Capacity: <strong>{{ effectiveCapacity() }}</strong> students</span>
               </div>
 
               <div class="form-actions mt-16">
@@ -213,9 +222,37 @@ export class RoomManagementComponent implements OnInit {
   floorOptions = FLOOR_OPTIONS;
   formatFloor = formatFloor;
 
-  form = { name: '', floor: 'Ground Floor', rowsCount: 5, benchesPerRow: 6, seatsPerBench: 2, isActive: true };
+  form = { name: '', floor: 'Ground Floor', rowsCount: 5, benchesPerRow: 6, seatsPerBench: 2, isActive: true, rowLayoutText: '' };
 
   ngOnInit() { this.loadRooms(); }
+
+  /** Parse "6,6,5" → [6,6,5]. Returns null on empty, undefined on invalid. */
+  private parseLayout(text: string): number[] | null | undefined {
+    const raw = (text ?? '').trim();
+    if (!raw) return null;
+    const parts = raw.split(',').map(s => Number(s.trim()));
+    if (parts.some(n => !Number.isInteger(n) || n < 1 || n > 40)) return undefined;
+    return parts;
+  }
+
+  layoutError(): string {
+    return this.parseLayout(this.form.rowLayoutText) === undefined
+      ? 'Use whole numbers 1–40, e.g. 6,6,5'
+      : '';
+  }
+  private effectiveLayout(): number[] {
+    const parsed = this.parseLayout(this.form.rowLayoutText);
+    if (parsed && parsed.length) return parsed;
+    return Array.from({ length: this.form.rowsCount || 0 }, () => this.form.benchesPerRow || 0);
+  }
+  effectiveCapacity(): number {
+    return this.effectiveLayout().reduce((a, b) => a + b, 0) * (this.form.seatsPerBench || 0);
+  }
+  layoutLabel(): string {
+    const parsed = this.parseLayout(this.form.rowLayoutText);
+    if (parsed && parsed.length) return `rows [${parsed.join(', ')}] × ${this.form.seatsPerBench} seats`;
+    return `${this.form.rowsCount} rows × ${this.form.benchesPerRow} benches × ${this.form.seatsPerBench} seats`;
+  }
 
   loadRooms() {
     this.roomService.getRooms().subscribe(r => this.rooms.set(r));
@@ -232,7 +269,8 @@ export class RoomManagementComponent implements OnInit {
       rowsCount: room.rowsCount,
       benchesPerRow: room.benchesPerRow,
       seatsPerBench: room.seatsPerBench,
-      isActive: room.isActive
+      isActive: room.isActive,
+      rowLayoutText: room.rowLayout?.length ? room.rowLayout.join(',') : ''
     };
     this.showForm.set(true);
   }
@@ -241,10 +279,16 @@ export class RoomManagementComponent implements OnInit {
     if (!this.form.name || !this.form.rowsCount || !this.form.benchesPerRow || !this.form.seatsPerBench) {
       this.toastService.error('Please fill in all required fields.'); return;
     }
+    const parsed = this.parseLayout(this.form.rowLayoutText);
+    if (parsed === undefined) { this.toastService.error('Fix the uneven layout — use numbers like 6,6,5.'); return; }
     this.saving.set(true);
     try {
-      const benchCount = this.form.rowsCount * this.form.benchesPerRow;
-      const payload = { ...this.form, benchCount };
+      const { rowLayoutText, ...base } = this.form;
+      const rowLayout = parsed && parsed.length ? parsed : undefined;
+      // With an uneven layout, rowsCount follows the layout length.
+      const rowsCount = rowLayout ? rowLayout.length : this.form.rowsCount;
+      const benchCount = this.effectiveLayout().reduce((a, b) => a + b, 0);
+      const payload = { ...base, rowsCount, rowLayout, benchCount };
       if (this.editingId()) {
         await this.roomService.updateRoom(this.editingId()!, payload);
         this.toastService.success('Room updated.');
@@ -270,29 +314,26 @@ export class RoomManagementComponent implements OnInit {
   }
 
   resetForm() {
-    this.form = { name: '', floor: 'Ground Floor', rowsCount: 5, benchesPerRow: 6, seatsPerBench: 2, isActive: true };
+    this.form = { name: '', floor: 'Ground Floor', rowsCount: 5, benchesPerRow: 6, seatsPerBench: 2, isActive: true, rowLayoutText: '' };
   }
 
   // Returns rows of bench numbers for preview. Negative = "+N more" chip.
   getPreviewRows(room: Room): number[][] {
+    const layout = roomRowLayout(room);
     const maxRows = 3;
     const maxBpr = 5;
     const rows: number[][] = [];
     let b = 1;
-    for (let r = 0; r < Math.min(room.rowsCount, maxRows); r++) {
+    for (let r = 0; r < Math.min(layout.length, maxRows); r++) {
+      const benches = layout[r];
       const row: number[] = [];
-      const bprVisible = Math.min(room.benchesPerRow, maxBpr);
-      for (let c = 0; c < bprVisible; c++) {
-        row.push(b++);
-      }
-      if (room.benchesPerRow > maxBpr) {
-        row.push(-(room.benchesPerRow - maxBpr));
-        b += room.benchesPerRow - maxBpr;
-      }
+      const bprVisible = Math.min(benches, maxBpr);
+      for (let c = 0; c < bprVisible; c++) row.push(b++);
+      if (benches > maxBpr) { row.push(-(benches - maxBpr)); b += benches - maxBpr; }
       rows.push(row);
     }
-    if (room.rowsCount > maxRows) {
-      const remaining = (room.rowsCount - maxRows) * room.benchesPerRow;
+    if (layout.length > maxRows) {
+      const remaining = layout.slice(maxRows).reduce((a, n) => a + n, 0);
       rows.push([-remaining]);
     }
     return rows;

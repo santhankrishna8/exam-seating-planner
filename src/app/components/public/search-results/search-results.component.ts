@@ -36,6 +36,28 @@ import { ExamService, SearchHit } from '../../../services/exam.service';
               <p>No published exams found for hall ticket <strong>{{ hallTicket }}</strong>. Please check the number or contact your college admin.</p>
             </div>
           } @else {
+            @if (results().length > 1) {
+              <div class="summary-table table-wrapper glass-card no-print">
+                <table>
+                  <thead>
+                    <tr><th>Exam</th><th>Date</th><th>Time</th><th>Room</th><th>Bench</th><th>Seat</th></tr>
+                  </thead>
+                  <tbody>
+                    @for (r of results(); track r.examId) {
+                      <tr>
+                        <td>{{ r.examName }}</td>
+                        <td>{{ r.date ? (r.date | date:'dd MMM yyyy') : '—' }}</td>
+                        <td class="mono">{{ r.startTime || '—' }}@if (r.endTime) {–{{ r.endTime }}}</td>
+                        <td>{{ r.seat.roomName }}</td>
+                        <td class="mono">{{ r.seat.benchNumber }}</td>
+                        <td class="mono">{{ r.seat.seatNumber }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
             <div class="results-list">
               @for (r of results(); track r.examId) {
                 <div class="result-card glass-card">

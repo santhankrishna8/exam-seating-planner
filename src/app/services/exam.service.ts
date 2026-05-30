@@ -75,6 +75,7 @@ export class ExamService {
       id: d['id'],
       name: d['name'],
       subjectCode: d['subjectCode'],
+      department: d['department'] ?? '',
       date: d['date'] instanceof Timestamp ? d['date'].toDate() : new Date(d['date']),
       startTime: d['startTime'],
       endTime: d['endTime'],
@@ -82,6 +83,8 @@ export class ExamService {
       shuffleMode: d['shuffleMode'] ?? 'sequential',
       spacing: d['spacing'] ?? false,
       selectedRooms: d['selectedRooms'] ?? [],
+      teachersPerRoom: d['teachersPerRoom'] ?? 1,
+      invigilators: d['invigilators'] ?? {},
       createdAt: d['createdAt'] instanceof Timestamp ? d['createdAt'].toDate() : new Date()
     };
   }
@@ -141,6 +144,39 @@ export class ExamService {
     return conflicts;
   }
 
+  /** Teacher ids already on invigilation duty at an overlapping exam time. */
+  async getBusyTeachers(examId: string, date: Date, startTime: string, endTime: string): Promise<Set<string>> {
+    const allExams = await firstValueFrom(this.getExams());
+    const busy = new Set<string>();
+    for (const other of allExams) {
+      if (other.id === examId || other.status === 'archived') continue;
+      if (!sameDay(other.date, date)) continue;
+      if (!timesOverlap(startTime, endTime, other.startTime, other.endTime)) continue;
+      for (const ids of Object.values(other.invigilators ?? {})) {
+        for (const id of ids) busy.add(id);
+      }
+    }
+    return busy;
+  }
+
+  /** Total invigilation duties already assigned per teacher across non-archived exams. */
+  async getDutyCounts(excludeExamId?: string): Promise<Map<string, number>> {
+    const allExams = await firstValueFrom(this.getExams());
+    const counts = new Map<string, number>();
+    for (const e of allExams) {
+      if (e.id === excludeExamId || e.status === 'archived') continue;
+      for (const ids of Object.values(e.invigilators ?? {})) {
+        for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }
+
+  async saveInvigilators(examId: string, invigilators: Record<string, string[]>, teachersPerRoom: number): Promise<void> {
+    const uid = this.auth.currentUid!;
+    await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { invigilators, teachersPerRoom });
+  }
+
   async getStudents(examId: string): Promise<Student[]> {
     const uid = this.auth.currentUid!;
     const snap = await getDocs(collection(this.firestore, `colleges/${uid}/exams/${examId}/students`));
@@ -169,6 +205,19 @@ export class ExamService {
       });
     }
     await batch.commit();
+  }
+
+  /** Persist present/absent flags for seated students (chunked batches). */
+  async saveAttendance(examId: string, updates: { hallTicketNo: string; absent: boolean }[]): Promise<void> {
+    const uid = this.auth.currentUid!;
+    const CHUNK = 490;
+    for (let i = 0; i < updates.length; i += CHUNK) {
+      const batch = writeBatch(this.firestore);
+      for (const u of updates.slice(i, i + CHUNK)) {
+        batch.update(doc(this.firestore, `colleges/${uid}/exams/${examId}/students`, u.hallTicketNo), { absent: u.absent });
+      }
+      await batch.commit();
+    }
   }
 
   async publishExam(examId: string): Promise<void> {

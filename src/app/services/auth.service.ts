@@ -19,6 +19,15 @@ export class AuthService {
     return this.auth.currentUser?.uid ?? null;
   }
 
+  get currentEmail(): string | null {
+    return this.auth.currentUser?.email ?? null;
+  }
+
+  /** Plain account (no college doc) — used for invigilator/teacher portal logins. */
+  async signUp(email: string, password: string): Promise<void> {
+    await createUserWithEmailAndPassword(this.auth, email, password);
+  }
+
   async register(email: string, password: string, collegeName: string, collegeCode: string): Promise<void> {
     const cred = await createUserWithEmailAndPassword(this.auth, email, password);
     await setDoc(doc(this.firestore, 'colleges', cred.user.uid), {

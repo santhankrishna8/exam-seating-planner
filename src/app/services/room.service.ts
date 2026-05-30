@@ -23,9 +23,12 @@ export class RoomService {
   }
 
   private mapRoom(id: string, data: any): Room {
-    const rowsCount = data['rowsCount'] ?? 1;
-    const benchesPerRow = data['benchesPerRow'] ?? data['benchCount'] ?? 30;
-    const benchCount = data['benchCount'] ?? rowsCount * benchesPerRow;
+    const layout: number[] | undefined = Array.isArray(data['rowLayout']) && data['rowLayout'].length
+      ? data['rowLayout'].map((n: any) => Number(n) || 0)
+      : undefined;
+    const rowsCount = layout ? layout.length : (data['rowsCount'] ?? 1);
+    const benchesPerRow = layout ? Math.max(...layout) : (data['benchesPerRow'] ?? data['benchCount'] ?? 30);
+    const benchCount = layout ? layout.reduce((a, b) => a + b, 0) : (data['benchCount'] ?? rowsCount * benchesPerRow);
     const seatsPerBench = data['seatsPerBench'] ?? 2;
     return {
       id,
@@ -33,6 +36,7 @@ export class RoomService {
       floor: data['floor'] ?? '',
       rowsCount,
       benchesPerRow,
+      rowLayout: layout,
       benchCount,
       seatsPerBench,
       totalCapacity: benchCount * seatsPerBench,
@@ -40,13 +44,20 @@ export class RoomService {
     };
   }
 
+  // Sum of an optional uneven layout, else uniform rows×perRow.
+  private benchCountFor(room: { rowsCount: number; benchesPerRow: number; rowLayout?: number[] }): number {
+    if (room.rowLayout && room.rowLayout.length) return room.rowLayout.reduce((a, b) => a + b, 0);
+    return room.rowsCount * room.benchesPerRow;
+  }
+
   async addRoom(room: Omit<Room, 'id' | 'totalCapacity'>): Promise<void> {
-    const benchCount = room.rowsCount * room.benchesPerRow;
+    const benchCount = this.benchCountFor(room);
     await addDoc(this.roomsCol(), {
       name: room.name,
       floor: room.floor,
       rowsCount: room.rowsCount,
       benchesPerRow: room.benchesPerRow,
+      rowLayout: room.rowLayout ?? null,
       benchCount,
       seatsPerBench: room.seatsPerBench,
       totalCapacity: benchCount * room.seatsPerBench,
@@ -58,13 +69,15 @@ export class RoomService {
   async updateRoom(id: string, room: Partial<Room>): Promise<void> {
     const uid = this.auth.currentUid!;
     const updates: any = { ...room };
-    const rows = room.rowsCount;
-    const bpr = room.benchesPerRow;
-    if (rows !== undefined || bpr !== undefined) {
-      const r = rows ?? 1;
-      const b = bpr ?? 1;
-      updates['benchCount'] = r * b;
-      updates['totalCapacity'] = r * b * (room.seatsPerBench ?? 2);
+    if ('rowLayout' in room) updates['rowLayout'] = room.rowLayout ?? null;
+    if (room.rowsCount !== undefined || room.benchesPerRow !== undefined || 'rowLayout' in room) {
+      const benchCount = this.benchCountFor({
+        rowsCount: room.rowsCount ?? 1,
+        benchesPerRow: room.benchesPerRow ?? 1,
+        rowLayout: room.rowLayout ?? undefined
+      });
+      updates['benchCount'] = benchCount;
+      updates['totalCapacity'] = benchCount * (room.seatsPerBench ?? 2);
     }
     await updateDoc(doc(this.firestore, `colleges/${uid}/rooms`, id), updates);
   }

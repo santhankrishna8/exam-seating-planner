@@ -115,6 +115,7 @@ export class AdminSidebarComponent {
   navItems: { route: string; icon: IconName; label: string }[] = [
     { route: '/admin/dashboard', icon: 'dashboard', label: 'Dashboard' },
     { route: '/admin/rooms', icon: 'building', label: 'Rooms' },
+    { route: '/admin/teachers', icon: 'badge', label: 'Teachers' },
     { route: '/admin/exams', icon: 'document', label: 'Exams' }
   ];
 

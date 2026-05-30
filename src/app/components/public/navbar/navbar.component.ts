@@ -23,6 +23,7 @@ import { BrandMarkComponent } from '../../../shared/brand-mark/brand-mark.compon
             [title]="theme.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
             <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="18" />
           </button>
+          <a routerLink="/teacher/login" class="nav-link">Invigilator</a>
           <a routerLink="/admin/login" class="btn btn-outline btn-sm">Admin Login</a>
         </div>
       </div>

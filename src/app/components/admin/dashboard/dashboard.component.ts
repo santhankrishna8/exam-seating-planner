@@ -8,6 +8,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { RoomService } from '../../../services/room.service';
 import { ExamService } from '../../../services/exam.service';
 import { CollegeService } from '../../../services/college.service';
+import { TeacherService } from '../../../services/teacher.service';
 import { Room } from '../../../models/room.model';
 import { Exam } from '../../../models/exam.model';
 import { firstValueFrom } from 'rxjs';
@@ -40,6 +41,11 @@ import { firstValueFrom } from 'rxjs';
                 <div class="stat-icon"><app-icon name="seat" [size]="20" /></div>
                 <div class="stat-label">Total Capacity</div>
                 <div class="stat-value">{{ totalCapacity() }}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon"><app-icon name="badge" [size]="20" /></div>
+                <div class="stat-label">Teachers</div>
+                <div class="stat-value">{{ teacherCount() }}</div>
               </div>
               <div class="stat-card">
                 <div class="stat-icon"><app-icon name="document" [size]="20" /></div>
@@ -148,11 +154,13 @@ export class DashboardComponent implements OnInit {
   private roomService = inject(RoomService);
   private examService = inject(ExamService);
   private collegeService = inject(CollegeService);
+  private teacherService = inject(TeacherService);
 
   loading = signal(true);
   rooms = signal<Room[]>([]);
   exams = signal<Exam[]>([]);
   collegeName = signal('');
+  teacherCount = signal(0);
 
   totalCapacity = () => this.rooms().reduce((s, r) => s + r.totalCapacity, 0);
   publishedCount = () => this.exams().filter(e => e.status === 'published').length;
@@ -160,14 +168,16 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const [college, rooms, exams] = await Promise.all([
+      const [college, rooms, exams, teachers] = await Promise.all([
         this.collegeService.getMyCollege(),
         firstValueFrom(this.roomService.getRooms()),
-        firstValueFrom(this.examService.getExams())
+        firstValueFrom(this.examService.getExams()),
+        firstValueFrom(this.teacherService.getTeachers())
       ]);
       this.collegeName.set(college?.name ?? '');
       this.rooms.set(rooms ?? []);
       this.exams.set(exams ?? []);
+      this.teacherCount.set((teachers ?? []).length);
     } finally {
       this.loading.set(false);
     }

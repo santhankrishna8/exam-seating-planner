@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { teacherGuard } from './guards/teacher.guard';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,15 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'teacher/login',
+    loadComponent: () => import('./components/teacher/teacher-login/teacher-login.component').then(m => m.TeacherLoginComponent)
+  },
+  {
+    path: 'teacher',
+    canActivate: [teacherGuard],
+    loadComponent: () => import('./components/teacher/teacher-portal/teacher-portal.component').then(m => m.TeacherPortalComponent)
+  },
+  {
     path: 'admin/register',
     loadComponent: () => import('./components/admin/register/register.component').then(m => m.RegisterComponent)
   },
@@ -31,6 +41,11 @@ export const routes: Routes = [
     path: 'admin/rooms',
     canActivate: [authGuard],
     loadComponent: () => import('./components/admin/room-management/room-management.component').then(m => m.RoomManagementComponent)
+  },
+  {
+    path: 'admin/teachers',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/admin/teacher-management/teacher-management.component').then(m => m.TeacherManagementComponent)
   },
   {
     path: 'admin/exams',

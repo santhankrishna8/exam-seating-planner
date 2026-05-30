@@ -8,7 +8,7 @@ export type IconName =
   | 'upload' | 'file' | 'bolt' | 'send' | 'eye' | 'pencil' | 'trash'
   | 'calendar' | 'clock' | 'users' | 'arrow-left' | 'arrow-right'
   | 'chevron-left' | 'chevron-right' | 'shuffle' | 'list-ordered' | 'inbox'
-  | 'x-circle' | 'info' | 'alert';
+  | 'x-circle' | 'info' | 'alert' | 'badge';
 
 // Hand-tuned 24×24 stroke geometry, single source of truth.
 // No emoji anywhere in the product UI — icons read as crafted, not AI-default.
@@ -46,6 +46,7 @@ const PATHS: Record<IconName, string> = {
   'x-circle': '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
   'info': '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
   'alert': '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'badge': '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6.5 16a2.6 2.6 0 0 1 5 0"/><path d="M15 10h3.5M15 13h3.5"/>',
 };
 
 @Component({

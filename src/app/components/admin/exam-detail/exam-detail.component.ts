@@ -11,9 +11,14 @@ import { RoomService } from '../../../services/room.service';
 import { SeatingService } from '../../../services/seating.service';
 import { ToastService } from '../../../services/toast.service';
 import { FileUploadService } from '../../../services/file-upload.service';
+import { TeacherService } from '../../../services/teacher.service';
+import { DutyService } from '../../../services/duty.service';
+import { CollegeService } from '../../../services/college.service';
 import { Exam } from '../../../models/exam.model';
 import { Student } from '../../../models/student.model';
 import { Room } from '../../../models/room.model';
+import { Teacher } from '../../../models/teacher.model';
+import { Duty } from '../../../models/duty.model';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -175,6 +180,70 @@ import { firstValueFrom } from 'rxjs';
                 <p>Upload a CSV or Excel file with student hall ticket numbers to get started.</p>
               </div>
             }
+
+            <!-- Invigilators -->
+            <div class="glass-card invig-section">
+              <div class="invig-header">
+                <div>
+                  <h3>Invigilators</h3>
+                  <span class="text-muted" style="font-size:0.8rem">{{ exam()!.teachersPerRoom }} per room · {{ assignedInvigilatorCount() }} on duty</span>
+                </div>
+                <div class="invig-actions">
+                  @if (teachers().length === 0) {
+                    <a routerLink="/admin/teachers" class="btn btn-outline btn-sm"><app-icon name="badge" [size]="16" /> Add Teachers</a>
+                  } @else {
+                    @if (hasInvigilators()) {
+                      <button class="btn btn-ghost btn-sm" (click)="clearInvigilators()" [disabled]="actionLoading()">Clear</button>
+                    }
+                    <button class="btn btn-primary btn-sm" (click)="allotInvigilators()" [disabled]="actionLoading()">
+                      <app-icon name="shuffle" [size]="16" /> {{ hasInvigilators() ? 'Re-allot' : 'Auto-allot' }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (hasInvigilators()) {
+                <div class="table-wrapper">
+                  <table>
+                    <thead><tr><th>Room</th><th>Invigilator(s)</th></tr></thead>
+                    <tbody>
+                      @for (row of invigilatorRoster(); track row.roomId) {
+                        <tr>
+                          <td><strong>{{ row.roomName }}</strong></td>
+                          <td>
+                            @if (row.teachers.length) {
+                              <div class="invig-names">
+                                @for (t of row.teachers; track t.id) {
+                                  <span class="invig-chip"><app-icon name="badge" [size]="13" /> {{ t.name }}@if (t.department) {<span class="text-muted"> · {{ t.department }}</span>}</span>
+                                }
+                              </div>
+                            } @else {
+                              <span class="text-warning">Unstaffed</span>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="invig-empty text-muted">
+                  No invigilators allotted yet.
+                  {{ teachers().length ? 'Click Auto-allot to assign available teachers to each room.' : 'Add teachers to your staff list first.' }}
+                </p>
+              }
+
+              @if (hasInvigilators()) {
+                <div class="invig-foot">
+                  <span class="text-muted">Invigilator attendance: <strong>{{ submittedCount() }}</strong> / {{ submittedDuties().length }} submitted</span>
+                  @if (hasSubmissions()) {
+                    <button class="btn btn-outline btn-sm" (click)="applySubmittedAttendance()" [disabled]="actionLoading()">
+                      <app-icon name="check-circle" [size]="15" /> Apply to records
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
         }
       </main>
@@ -201,6 +270,16 @@ import { firstValueFrom } from 'rxjs';
     .table-header-row { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
     .table-header-row h3 { font-size: 0.95rem; flex: 1; }
     code { font-family: monospace; font-size: 0.85rem; color: var(--accent-blue); }
+
+    .invig-section { padding: 0; overflow: hidden; }
+    .invig-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+    .invig-header h3 { font-size: 0.95rem; }
+    .invig-actions { display: flex; gap: 8px; }
+    .invig-empty { padding: 20px; font-size: 0.88rem; }
+    .invig-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--border-color); font-size: 0.85rem; }
+    .invig-names { display: flex; flex-wrap: wrap; gap: 6px; }
+    .invig-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: oklch(0.42 0.13 274 / 0.08); border: 1px solid oklch(0.42 0.13 274 / 0.2); font-size: 0.82rem; }
+    .invig-chip app-icon { color: var(--accent-blue); }
   `]
 })
 export class ExamDetailComponent implements OnInit {
@@ -210,14 +289,20 @@ export class ExamDetailComponent implements OnInit {
   private seatingService = inject(SeatingService);
   private toastService = inject(ToastService);
   private fileUploadService = inject(FileUploadService);
+  private teacherService = inject(TeacherService);
+  private dutyService = inject(DutyService);
+  private collegeService = inject(CollegeService);
   private router = inject(Router);
 
   examId = '';
+  collegeName = '';
+  submittedDuties = signal<Duty[]>([]);
   loading = signal(true);
   actionLoading = signal(false);
   exam = signal<Exam | null>(null);
   students = signal<Student[]>([]);
   rooms = signal<Room[]>([]);
+  teachers = signal<Teacher[]>([]);
   showPublishDialog = signal(false);
   showArchiveDialog = signal(false);
   showDeleteDialog = signal(false);
@@ -226,17 +311,42 @@ export class ExamDetailComponent implements OnInit {
   seatedCount = () => this.students().filter(s => s.isSeated).length;
   getRoomName = (roomId?: string) => this.rooms().find(r => r.id === roomId)?.name ?? roomId ?? '—';
 
+  // ── Invigilators ──
+  examRooms = (): Room[] => {
+    const e = this.exam();
+    if (!e) return [];
+    const all = this.rooms();
+    return e.selectedRooms.length ? all.filter(r => e.selectedRooms.includes(r.id)) : all;
+  };
+  hasInvigilators = () => Object.values(this.exam()?.invigilators ?? {}).some(ids => ids.length > 0);
+  assignedInvigilatorCount = () => Object.values(this.exam()?.invigilators ?? {}).reduce((n, ids) => n + ids.length, 0);
+  private teacherById = (id: string) => this.teachers().find(t => t.id === id);
+  invigilatorRoster = (): { roomId: string; roomName: string; teachers: Teacher[] }[] => {
+    const inv = this.exam()?.invigilators ?? {};
+    return this.examRooms().map(r => ({
+      roomId: r.id,
+      roomName: r.name,
+      teachers: (inv[r.id] ?? []).map(id => this.teacherById(id)).filter((t): t is Teacher => !!t)
+    }));
+  };
+
   async ngOnInit() {
     this.examId = this.route.snapshot.paramMap.get('id')!;
     try {
-      const [exam, students, rooms] = await Promise.all([
+      const [exam, students, rooms, teachers, college, duties] = await Promise.all([
         this.examService.getExam(this.examId),
         this.examService.getStudents(this.examId),
-        firstValueFrom(this.roomService.getRooms())
+        firstValueFrom(this.roomService.getRooms()),
+        firstValueFrom(this.teacherService.getTeachers()),
+        this.collegeService.getMyCollege().catch(() => null),
+        this.dutyService.getDutiesForExam(this.examId).catch(() => [])
       ]);
       this.exam.set(exam);
       this.students.set(students);
       this.rooms.set(rooms ?? []);
+      this.teachers.set(teachers ?? []);
+      this.collegeName = college?.name ?? '';
+      this.submittedDuties.set(duties);
     } finally { this.loading.set(false); }
   }
 
@@ -299,6 +409,83 @@ export class ExamDetailComponent implements OnInit {
       this.toastService.success('Exam archived.');
     } catch (e: any) {
       this.toastService.error(e?.message ?? 'Failed to archive exam.');
+    } finally { this.actionLoading.set(false); }
+  }
+
+  async allotInvigilators() {
+    const exam = this.exam();
+    if (!exam) return;
+    if (this.teachers().filter(t => t.isActive).length === 0) {
+      this.toastService.error('No available teachers. Add teachers first.'); return;
+    }
+    const roomObjs = this.examRooms();
+    if (roomObjs.length === 0) { this.toastService.error('This exam has no rooms selected.'); return; }
+
+    this.actionLoading.set(true);
+    try {
+      const [busy, dutyCounts] = await Promise.all([
+        this.examService.getBusyTeachers(this.examId, exam.date, exam.startTime, exam.endTime),
+        this.examService.getDutyCounts(this.examId)
+      ]);
+      const res = this.teacherService.allot({
+        roomIds: roomObjs.map(r => r.id),
+        teachersPerRoom: exam.teachersPerRoom,
+        teachers: this.teachers(),
+        busyTeacherIds: busy,
+        examDepartment: exam.department,
+        dutyCounts
+      });
+      await this.examService.saveInvigilators(this.examId, res.allotment, exam.teachersPerRoom);
+      const updated = { ...exam, invigilators: res.allotment };
+      this.exam.update(e => e ? { ...e, invigilators: res.allotment } : e);
+      // Publish teacher-readable duty docs (for the invigilator portal).
+      const teachersById = new Map(this.teachers().map(t => [t.id, t]));
+      const roomNames = new Map(this.rooms().map(r => [r.id, r.name]));
+      await this.dutyService.publishDuties(updated, teachersById, roomNames, this.collegeName).catch(() => {});
+      this.submittedDuties.set(await this.dutyService.getDutiesForExam(this.examId).catch(() => []));
+      if (res.shortBy > 0) {
+        this.toastService.error(`Allotted ${res.assignedCount}, but ${res.shortBy} more teacher(s) needed — some rooms are unstaffed.`);
+      } else {
+        this.toastService.success(`Invigilators allotted across ${roomObjs.length} room(s).`);
+      }
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Failed to allot invigilators.');
+    } finally { this.actionLoading.set(false); }
+  }
+
+  async clearInvigilators() {
+    const exam = this.exam();
+    if (!exam) return;
+    this.actionLoading.set(true);
+    try {
+      await this.examService.saveInvigilators(this.examId, {}, exam.teachersPerRoom);
+      await this.dutyService.clearDuties(this.examId).catch(() => {});
+      this.exam.update(e => e ? { ...e, invigilators: {} } : e);
+      this.submittedDuties.set([]);
+      this.toastService.success('Invigilator allotment cleared.');
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Failed to clear.');
+    } finally { this.actionLoading.set(false); }
+  }
+
+  // Submitted-attendance reconciliation
+  submittedCount = () => this.submittedDuties().filter(d => d.submitted).length;
+  hasSubmissions = () => this.submittedCount() > 0;
+
+  async applySubmittedAttendance() {
+    this.actionLoading.set(true);
+    try {
+      const duties = await this.dutyService.getDutiesForExam(this.examId);
+      const absent = new Set<string>();
+      for (const d of duties) for (const ht of d.absentHallTickets ?? []) absent.add(ht);
+      const updates = this.students().filter(s => s.isSeated)
+        .map(s => ({ hallTicketNo: s.hallTicketNo, absent: absent.has(s.hallTicketNo) }));
+      await this.examService.saveAttendance(this.examId, updates);
+      this.students.update(list => list.map(s => s.isSeated ? { ...s, absent: absent.has(s.hallTicketNo) } : s));
+      this.submittedDuties.set(duties);
+      this.toastService.success(`Applied invigilator attendance · ${absent.size} absent.`);
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Failed to apply attendance.');
     } finally { this.actionLoading.set(false); }
   }
 
