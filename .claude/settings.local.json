@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"Caveman mode active this session: respond terse like smart caveman, drop articles/filler/pleasantries, keep all technical substance exact, code blocks unchanged. Default intensity full. Revert only on \\\"stop caveman\\\" or \\\"normal mode\\\".\"}}'",
+            "statusMessage": "Re-asserting caveman mode"
+          }
+        ]
+      }
+    ]
+  }
+}

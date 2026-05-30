@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Exam Hall Seating — Firestore security model
+//
+//   colleges/{uid}                         → private admin workspace (owner only)
+//   colleges/{uid}/{document=**}           → rooms, exams, students (owner only)
+//   publicExams/{examId}                   → world-readable, owner-writable
+//   publicExams/{examId}/seats/{ht}        → world-readable, owner-writable
+//
+// Deploy with:  firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Private admin workspace ──────────────────────────────
+    match /colleges/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // ── Public, published seating ────────────────────────────
+    // Students look these up with no login, so reads are open.
+    match /publicExams/{examId} {
+      allow read: if true;
+
+      // Only the owning admin may create/update/delete the public record.
+      // (publishExam() stamps ownerUid on the metadata doc.)
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.ownerUid;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.ownerUid
+                    && request.auth.uid == request.resource.data.ownerUid;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.ownerUid;
+
+      // Seats: world-readable; writable only by the exam's owner.
+      match /seats/{hallTicket} {
+        allow read: if true;
+        allow write: if request.auth != null
+                     && request.auth.uid == get(/databases/$(database)/documents/publicExams/$(examId)).data.ownerUid;
+      }
+    }
+  }
+}
