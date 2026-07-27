@@ -20,12 +20,12 @@ import { PublicSeat } from '../../../models/student.model';
         <app-loader message="Loading seating arrangement..." />
       } @else {
         <div class="pv-inner fade-in">
-          <div class="pv-header glass-card">
-            <a routerLink="/" class="back-link">← Back</a>
+          <div class="pv-header card">
+            <a routerLink="/" class="back-link">← Back to lookup</a>
             <div class="pv-title-row">
               <div>
                 @if (meta()?.collegeName) { <div class="pv-college">{{ meta()!.collegeName }}</div> }
-                <h2 class="pv-title">{{ meta()?.examName || 'Seating Arrangement' }}</h2>
+                <h2 class="pv-title">{{ meta()?.examName || 'Seating arrangement' }}</h2>
                 <div class="pv-meta">
                   @if (meta()?.subjectCode) { <span class="badge badge-gray">{{ meta()!.subjectCode }}</span> }
                   @if (meta()?.date) { <span><app-icon name="calendar" [size]="14" /> {{ meta()!.date | date:'EEE, dd MMM yyyy' }}</span> }
@@ -40,11 +40,12 @@ import { PublicSeat } from '../../../models/student.model';
             </div>
           </div>
 
-          @for (room of roomGroups(); track room.roomName) {
-            <div class="room-section glass-card">
+          @for (room of roomGroups(); track room.key) {
+            <div class="room-section card">
               <div class="room-header">
                 <h3>{{ room.roomName }}</h3>
-                <span class="badge badge-blue">{{ room.seats.length }} students</span>
+                @if (room.floor) { <span class="badge badge-gray">{{ room.floor }}</span> }
+                <span class="badge badge-blue">{{ room.seats.length }} candidates</span>
               </div>
               <div class="table-wrapper">
                 <table>
@@ -72,7 +73,7 @@ import { PublicSeat } from '../../../models/student.model';
           }
 
           @if (roomGroups().length === 0) {
-            <div class="glass-card empty-state">
+            <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="clipboard" [size]="30" /></div>
               <h3>No results</h3>
               <p>No seats match your search query.</p>
@@ -83,7 +84,7 @@ import { PublicSeat } from '../../../models/student.model';
     </main>
   `,
   styles: [`
-    .public-view { padding: 32px 24px; max-width: 1000px; margin: 0 auto; }
+    .public-view { position: relative; z-index: 1; padding: 30px 24px 64px; max-width: 1000px; margin: 0 auto; }
     .pv-inner { display: flex; flex-direction: column; gap: 20px; }
     .pv-header { padding: 20px 24px; }
     .back-link { color: var(--text-muted); font-size: 0.875rem; text-decoration: none; display: inline-block; margin-bottom: 12px; }
@@ -98,7 +99,7 @@ import { PublicSeat } from '../../../models/student.model';
     .room-section { padding: 20px 0; }
     .room-header { display: flex; align-items: center; gap: 12px; padding: 0 20px 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; }
     .room-header h3 { font-size: 1rem; }
-    tr.highlighted td { background: oklch(0.42 0.13 274 / 0.10) !important; }
+    tr.highlighted td { background: color-mix(in oklch, var(--accent-blue) 10%, transparent) !important; }
     code { font-family: var(--font-mono); font-size: 0.875rem; color: var(--accent-blue); }
   `]
 })
@@ -133,16 +134,22 @@ export class ExamPublicViewComponent implements OnInit {
     );
   }
 
-  roomGroups(): { roomName: string; seats: PublicSeat[] }[] {
+  /** Grouped by hall id where available — two halls may share a name. */
+  roomGroups(): { key: string; roomName: string; floor: string; seats: PublicSeat[] }[] {
     const map = new Map<string, PublicSeat[]>();
     for (const s of this.filteredSeats) {
-      if (!map.has(s.roomName)) map.set(s.roomName, []);
-      map.get(s.roomName)!.push(s);
+      const key = s.roomId || s.roomName;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
     }
-    return Array.from(map.entries()).map(([roomName, seats]) => ({
-      roomName,
-      seats: seats.sort((a, b) => a.benchNumber - b.benchNumber || a.seatNumber - b.seatNumber)
-    }));
+    return Array.from(map.entries())
+      .map(([key, seats]) => ({
+        key,
+        roomName: seats[0].roomName || 'Unnamed hall',
+        floor: seats[0].floor ?? '',
+        seats: seats.sort((a, b) => a.benchNumber - b.benchNumber || a.seatNumber - b.seatNumber)
+      }))
+      .sort((a, b) => a.roomName.localeCompare(b.roomName, undefined, { numeric: true }));
   }
 
   isHighlighted(s: PublicSeat): boolean {

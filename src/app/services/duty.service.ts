@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc,
+  Firestore, collection, doc, getDocs, updateDoc, writeBatch,
   query, where, Timestamp, serverTimestamp
 } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
@@ -40,14 +40,17 @@ export class DutyService {
 
     await this.clearDuties(exam.id); // remove stale rows first
 
-    const entries = Object.entries(exam.invigilators ?? {});
-    for (const [roomId, teacherIds] of entries) {
+    // One batch instead of a round trip per invigilator — a 20-hall exam went
+    // from 20 sequential writes to one commit.
+    const batch = writeBatch(this.firestore);
+    let writes = 0;
+
+    for (const [roomId, teacherIds] of Object.entries(exam.invigilators ?? {})) {
       for (const tid of teacherIds) {
         const t = teachersById.get(tid);
         const email = (t?.email ?? '').trim().toLowerCase();
-        if (!email) continue; // a teacher with no email can't have a portal login
-        const id = `${exam.id}__${roomId}__${tid}`;
-        await setDoc(doc(this.firestore, 'duties', id), {
+        if (!email) continue; // without an email a teacher cannot sign in to the portal
+        batch.set(doc(this.firestore, 'duties', `${exam.id}__${roomId}__${tid}`), {
           ownerUid: uid,
           examId: exam.id,
           examName: exam.name,
@@ -64,13 +67,19 @@ export class DutyService {
           submitted: false,
           createdAt: serverTimestamp()
         });
+        writes++;
       }
     }
+
+    if (writes) await batch.commit();
   }
 
   async clearDuties(examId: string): Promise<void> {
     const snap = await getDocs(query(collection(this.firestore, 'duties'), where('examId', '==', examId)));
-    for (const d of snap.docs) await deleteDoc(d.ref);
+    if (snap.empty) return;
+    const batch = writeBatch(this.firestore);
+    for (const d of snap.docs) batch.delete(d.ref);
+    await batch.commit();
   }
 
   /** Admin: read all duties for an exam (to reconcile submitted attendance). */

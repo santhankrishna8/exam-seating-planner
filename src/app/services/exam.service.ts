@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  getDoc, getDocs, serverTimestamp, writeBatch, Timestamp
+  getDoc, getDocs, serverTimestamp, writeBatch, Timestamp, WriteBatch
 } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
 import { Exam, ExamStatus } from '../models/exam.model';
@@ -183,28 +183,64 @@ export class ExamService {
     return snap.docs.map(d => ({ hallTicketNo: d.id, ...d.data() } as Student));
   }
 
-  async saveStudents(examId: string, students: Student[]): Promise<void> {
-    const uid = this.auth.currentUid!;
-    const batch = writeBatch(this.firestore);
-    for (const s of students) {
-      const ref = doc(this.firestore, `colleges/${uid}/exams/${examId}/students`, s.hallTicketNo);
-      batch.set(ref, { name: s.name, department: s.department ?? '', section: s.section ?? '', isSeated: false });
+  /** Commit `writes` in Firestore-batch-sized chunks (limit is 500 per batch). */
+  private async inBatches<T>(items: T[], write: (batch: WriteBatch, item: T) => void): Promise<void> {
+    const CHUNK = 450;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const batch = writeBatch(this.firestore);
+      for (const item of items.slice(i, i + CHUNK)) write(batch, item);
+      await batch.commit();
     }
-    await batch.commit();
   }
 
-  async saveAssignedStudents(examId: string, students: Student[]): Promise<void> {
+  private studentsCol(examId: string) {
+    return collection(this.firestore, `colleges/${this.auth.currentUid!}/exams/${examId}/students`);
+  }
+
+  /**
+   * Replaces the roster. Uploading a second file must not leave students from
+   * the first one behind — those orphans would still count as seated and would
+   * be published with a stale seat.
+   */
+  async saveStudents(examId: string, students: Student[]): Promise<void> {
     const uid = this.auth.currentUid!;
-    const batch = writeBatch(this.firestore);
-    for (const s of students) {
+    const existing = await getDocs(this.studentsCol(examId));
+    const incoming = new Set(students.map(s => s.hallTicketNo));
+    const stale = existing.docs.filter(d => !incoming.has(d.id));
+
+    await this.inBatches(stale, (batch, d) => batch.delete(d.ref));
+    await this.inBatches(students, (batch, s) => {
       const ref = doc(this.firestore, `colleges/${uid}/exams/${examId}/students`, s.hallTicketNo);
       batch.set(ref, {
-        name: s.name, department: s.department ?? '', section: s.section ?? '',
-        assignedRoom: s.assignedRoom ?? '', assignedBench: s.assignedBench ?? 0,
-        assignedSeat: s.assignedSeat ?? 0, isSeated: true
+        name: s.name,
+        department: s.department ?? '',
+        section: s.section ?? '',
+        isSeated: false,
+        absent: false
       });
-    }
-    await batch.commit();
+    });
+  }
+
+  /**
+   * Persists an allotment. Students the halls could not seat are written back
+   * as unseated with no room, so a short-capacity run is visible rather than
+   * silently marking everyone seated.
+   */
+  async saveAssignedStudents(examId: string, students: Student[]): Promise<void> {
+    const uid = this.auth.currentUid!;
+    await this.inBatches(students, (batch, s) => {
+      const ref = doc(this.firestore, `colleges/${uid}/exams/${examId}/students`, s.hallTicketNo);
+      batch.set(ref, {
+        name: s.name,
+        department: s.department ?? '',
+        section: s.section ?? '',
+        assignedRoom: s.isSeated ? (s.assignedRoom ?? '') : '',
+        assignedBench: s.isSeated ? (s.assignedBench ?? 0) : 0,
+        assignedSeat: s.isSeated ? (s.assignedSeat ?? 0) : 0,
+        isSeated: !!s.isSeated,
+        absent: s.absent ?? false
+      });
+    });
   }
 
   /** Persist present/absent flags for seated students (chunked batches). */
@@ -227,11 +263,15 @@ export class ExamService {
     const exam = await this.getExam(examId);
     if (!exam) throw new Error('Exam not found.');
 
-    const students = await this.getStudents(examId);
+    const allStudents = await this.getStudents(examId);
+    const students = allStudents.filter(s => s.isSeated && s.assignedRoom);
+    if (students.length === 0) {
+      throw new Error('Nothing to publish — allot seating for this exam first.');
+    }
 
     // Re-check against already-published exams so two live exams never share a
     // hall at an overlapping time, even if drafts were generated independently.
-    const usedRooms = [...new Set(students.filter(s => s.assignedRoom).map(s => s.assignedRoom!))];
+    const usedRooms = [...new Set(students.map(s => s.assignedRoom!))];
     const conflicts = await this.getRoomConflicts(
       examId, usedRooms.length ? usedRooms : exam.selectedRooms,
       exam.date, exam.startTime, exam.endTime, true
@@ -270,24 +310,23 @@ export class ExamService {
     });
     await metaBatch.commit();
 
-    // Write seats in chunks of 490 (Firestore batch limit is 500)
-    const CHUNK = 490;
-    for (let i = 0; i < students.length; i += CHUNK) {
-      const chunk = students.slice(i, i + CHUNK);
-      const batch = writeBatch(this.firestore);
-      for (const s of chunk) {
-        const room = s.assignedRoom ? roomNames[s.assignedRoom] : null;
-        batch.set(doc(this.firestore, `publicExams/${examId}/seats`, s.hallTicketNo), {
-          name: s.name,
-          roomName: room?.name ?? '',
-          benchNumber: s.assignedBench ?? 0,
-          seatNumber: s.assignedSeat ?? 0,
-          seatsPerBench: room?.seatsPerBench ?? 2,
-          floor: room?.floor ?? ''
-        });
-      }
-      await batch.commit();
-    }
+    // Re-publishing must not leave seats from an earlier allotment behind.
+    const previous = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
+    const keep = new Set(students.map(s => s.hallTicketNo));
+    await this.inBatches(previous.docs.filter(d => !keep.has(d.id)), (batch, d) => batch.delete(d.ref));
+
+    await this.inBatches(students, (batch, s) => {
+      const room = roomNames[s.assignedRoom!];
+      batch.set(doc(this.firestore, `publicExams/${examId}/seats`, s.hallTicketNo), {
+        name: s.name,
+        roomId: s.assignedRoom ?? '',
+        roomName: room?.name ?? '',
+        benchNumber: s.assignedBench ?? 0,
+        seatNumber: s.assignedSeat ?? 0,
+        seatsPerBench: room?.seatsPerBench ?? 2,
+        floor: room?.floor ?? ''
+      });
+    });
 
     // Mark exam as published in the college's own collection
     await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'published' as ExamStatus });
@@ -322,12 +361,26 @@ export class ExamService {
     await updateDoc(doc(this.firestore, 'publicExams', examId), { status: 'archived' }).catch(() => {});
   }
 
+  /** Published seat documents are read in three places — map them in one. */
+  private mapSeat(hallTicketNo: string, d: any): PublicSeat {
+    return {
+      hallTicketNo,
+      name: d['name'] ?? '',
+      roomId: d['roomId'] ?? '',
+      roomName: d['roomName'] ?? '',
+      benchNumber: d['benchNumber'] ?? 0,
+      seatNumber: d['seatNumber'] ?? 0,
+      seatsPerBench: d['seatsPerBench'] ?? 2,
+      floor: d['floor'] ?? ''
+    };
+  }
+
   async getPublicSeat(examId: string, hallTicketNo: string): Promise<PublicSeat | null> {
     const key = normalizeHallTicket(hallTicketNo);
     const snap = await getDoc(doc(this.firestore, `publicExams/${examId}/seats`, key));
     if (!snap.exists()) return null;
     const d = snap.data() as any;
-    return { hallTicketNo: snap.id, name: d['name'], roomName: d['roomName'], benchNumber: d['benchNumber'], seatNumber: d['seatNumber'], seatsPerBench: d['seatsPerBench'] ?? 2, floor: d['floor'] };
+    return this.mapSeat(snap.id, d);
   }
 
   async searchByHallTicket(hallTicketNo: string): Promise<SearchHit[]> {
@@ -349,7 +402,7 @@ export class ExamService {
           date: ed['date'] instanceof Timestamp ? ed['date'].toDate() : (ed['date'] ? new Date(ed['date']) : null),
           startTime: ed['startTime'] ?? '',
           endTime: ed['endTime'] ?? '',
-          seat: { hallTicketNo: seatSnap.id, name: d['name'], roomName: d['roomName'], benchNumber: d['benchNumber'], seatNumber: d['seatNumber'], seatsPerBench: d['seatsPerBench'] ?? 2, floor: d['floor'] }
+          seat: this.mapSeat(seatSnap.id, d)
         });
       }
     }
@@ -377,7 +430,7 @@ export class ExamService {
     const snap = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
     return snap.docs.map(d => {
       const data = d.data() as any;
-      return { hallTicketNo: d.id, name: data['name'], roomName: data['roomName'], benchNumber: data['benchNumber'], seatNumber: data['seatNumber'], seatsPerBench: data['seatsPerBench'] ?? 2, floor: data['floor'] };
+      return this.mapSeat(d.id, data);
     });
   }
 }

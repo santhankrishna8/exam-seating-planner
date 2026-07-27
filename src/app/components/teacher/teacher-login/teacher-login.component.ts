@@ -4,59 +4,57 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { ToastComponent } from '../../../shared/toast/toast.component';
-import { BrandMarkComponent } from '../../../shared/brand-mark/brand-mark.component';
+import { AuthShellComponent } from '../../../shared/auth-shell/auth-shell.component';
 
 @Component({
   selector: 'app-teacher-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ToastComponent, BrandMarkComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ToastComponent, AuthShellComponent],
   template: `
     <app-toast />
-    <div class="auth-page">
-      <div class="auth-card glass-card fade-in">
-        <div class="auth-logo"><app-brand-mark [size]="52" /></div>
-        <h2 class="auth-title">Invigilator Portal</h2>
-        <p class="auth-sub text-muted">
-          {{ mode() === 'signup' ? 'Create your account' : 'Sign in' }} with the email your college registered for you.
-        </p>
+    <app-auth-shell
+      eyebrow="Invigilator portal"
+      [heading]="signingUp() ? 'Create account' : 'Sign in'"
+      subheading="Use the email your examination office recorded for you — duties are matched to that address."
+      note="Your duties, your hall, your attendance sheet.">
 
-        <form (ngSubmit)="submit()" #f="ngForm" novalidate>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-control" type="email" [(ngModel)]="email" name="email" required placeholder="teacher@college.edu" autocomplete="email" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input class="form-control" type="password" [(ngModel)]="password" name="password" required placeholder="••••••••" [attr.autocomplete]="mode() === 'signup' ? 'new-password' : 'current-password'" />
-            @if (mode() === 'signup') { <span class="form-hint">Minimum 6 characters.</span> }
-          </div>
-          @if (error()) { <p class="form-error mb-16">{{ error() }}</p> }
-          <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
-            @if (loading()) { Please wait… } @else { {{ mode() === 'signup' ? 'Create Account' : 'Sign In' }} }
-          </button>
-        </form>
+      <form (ngSubmit)="submit()" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="tl-email">Email</label>
+          <input id="tl-email" class="form-control" type="email" [(ngModel)]="email" name="email"
+            required placeholder="teacher@college.edu" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tl-password">Password</label>
+          <input id="tl-password" class="form-control" type="password" [(ngModel)]="password" name="password"
+            required placeholder="••••••••"
+            [attr.autocomplete]="signingUp() ? 'new-password' : 'current-password'" />
+          @if (signingUp()) { <span class="form-hint">Minimum 6 characters.</span> }
+        </div>
 
-        <p class="auth-footer text-muted">
-          @if (mode() === 'signup') {
-            Already have an account? <a (click)="switch('signin')" class="link">Sign in</a>
-          } @else {
-            First time here? <a (click)="switch('signup')" class="link">Create account</a>
-          }
-        </p>
-        <p class="auth-footer text-muted"><a routerLink="/admin/login">College admin login →</a></p>
-      </div>
-    </div>
+        @if (error()) { <p class="form-error mb-16" role="alert">{{ error() }}</p> }
+
+        <button type="submit" class="btn btn-primary w-full btn-lg" [disabled]="loading()">
+          {{ loading() ? 'Please wait…' : signingUp() ? 'Create account' : 'Sign in' }}
+        </button>
+      </form>
+
+      <p class="alt">
+        @if (signingUp()) {
+          Already have an account?
+          <button type="button" class="linkish" (click)="switch('signin')">Sign in</button>
+        } @else {
+          First time here?
+          <button type="button" class="linkish" (click)="switch('signup')">Create an account</button>
+        }
+      </p>
+      <p class="alt"><a routerLink="/admin/login">Examination office →</a></p>
+    </app-auth-shell>
   `,
   styles: [`
-    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-    .auth-card { padding: 44px 40px; width: 100%; max-width: 440px; text-align: center; }
-    .auth-logo { margin: 0 auto 20px; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
-    .auth-logo app-brand-mark { --mark-bg: var(--accent-blue); --mark-seat: oklch(1 0 0 / 0.6); --mark-ring: oklch(1 0 0 / 0.28); --mark-you: var(--accent-red); filter: drop-shadow(var(--shadow-md)); }
-    .auth-title { font-size: 1.7rem; margin-bottom: 8px; }
-    .auth-sub { margin-bottom: 28px; font-size: 0.9rem; }
-    .auth-footer { margin-top: 16px; font-size: 0.875rem; }
-    form { text-align: left; }
-    .link { color: var(--accent-blue); cursor: pointer; }
+    .alt { margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); }
+    .linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--accent-blue); }
+    .linkish:hover { color: var(--accent-blue-hover); text-decoration: underline; }
   `]
 })
 export class TeacherLoginComponent {
@@ -69,27 +67,29 @@ export class TeacherLoginComponent {
   loading = signal(false);
   error = signal('');
 
+  signingUp = () => this.mode() === 'signup';
   switch(m: 'signin' | 'signup') { this.mode.set(m); this.error.set(''); }
 
   async submit() {
     this.error.set('');
-    if (!this.email || !this.password) { this.error.set('Please fill in all fields.'); return; }
-    if (this.mode() === 'signup' && this.password.length < 6) { this.error.set('Password must be at least 6 characters.'); return; }
+    if (!this.email || !this.password) { this.error.set('Enter your email and password.'); return; }
+    if (this.signingUp() && this.password.length < 6) { this.error.set('Password must be at least 6 characters.'); return; }
+
     this.loading.set(true);
     try {
-      if (this.mode() === 'signup') await this.authService.signUp(this.email, this.password);
+      if (this.signingUp()) await this.authService.signUp(this.email, this.password);
       else await this.authService.login(this.email, this.password);
       this.router.navigate(['/teacher']);
     } catch (e: any) {
-      this.error.set(this.friendly(e?.code));
+      this.error.set(this.friendly(e?.code ?? ''));
     } finally { this.loading.set(false); }
   }
 
   private friendly(code: string): string {
-    if (code?.includes('email-already-in-use')) return 'This email already has an account — try signing in.';
-    if (code?.includes('invalid-credential') || code?.includes('wrong-password') || code?.includes('user-not-found')) return 'Invalid email or password.';
-    if (code?.includes('weak-password')) return 'Password is too weak.';
-    if (code?.includes('too-many-requests')) return 'Too many attempts. Try again later.';
+    if (code.includes('email-already-in-use')) return 'That email already has an account — sign in instead.';
+    if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Invalid email or password.';
+    if (code.includes('weak-password')) return 'Password is too weak.';
+    if (code.includes('too-many-requests')) return 'Too many attempts. Try again in a few minutes.';
     return 'Something went wrong. Please try again.';
   }
 }

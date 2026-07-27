@@ -41,16 +41,20 @@ interface DutyRow {
       <app-admin-sidebar />
       <main class="admin-main">
         <div class="page-content fade-in">
-          <div class="section-header">
+          <header class="page-head">
             <div>
-              <h1>Teachers</h1>
-              <p class="text-muted">Staff available for invigilation duty.</p>
+              <span class="eyebrow">Resources</span>
+              <h1 class="page-title">Invigilators</h1>
+              <p class="page-sub">
+                {{ teachers().length }} on roll · {{ availableCount() }} available for duty
+                @if (withoutEmail() > 0) { · <span class="text-warning">{{ withoutEmail() }} without an email</span> }
+              </p>
             </div>
-            <button class="btn btn-primary" (click)="openForm()"><app-icon name="plus" [size]="16" /> Add Teacher</button>
-          </div>
+            <button class="btn btn-primary" (click)="openForm()"><app-icon name="plus" [size]="15" /> Add invigilator</button>
+          </header>
 
           @if (showForm()) {
-            <div class="glass-card teacher-form mb-24">
+            <div class="card teacher-form mb-24">
               <h3 class="mb-16">{{ editingId() ? 'Edit Teacher' : 'Add Teacher' }}</h3>
               <div class="form-row">
                 <div class="form-group">
@@ -66,6 +70,7 @@ interface DutyRow {
                 <div class="form-group">
                   <label class="form-label">Email</label>
                   <input class="form-control" type="email" [(ngModel)]="form.email" placeholder="a.sharma@college.edu" />
+                  <span class="form-hint">Required for the invigilator portal — duties are matched to this address.</span>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Phone</label>
@@ -89,19 +94,20 @@ interface DutyRow {
           }
 
           @if (teachers().length === 0) {
-            <div class="glass-card empty-state">
+            <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="badge" [size]="30" /></div>
               <h3>No teachers yet</h3>
               <p>Add your teaching staff so they can be allotted as invigilators.</p>
             </div>
           } @else {
-            <div class="table-wrapper glass-card">
+            <div class="table-wrapper card">
               <table>
                 <thead>
                   <tr>
                     <th>Name</th>
                     <th>Department</th>
                     <th>Contact</th>
+                    <th>Duties</th>
                     <th>Status</th>
                     <th class="text-right">Actions</th>
                   </tr>
@@ -116,6 +122,7 @@ interface DutyRow {
                         @if (t.phone) { <span class="text-muted">{{ t.phone }}</span> }
                         @if (!t.email && !t.phone) { <span class="text-muted">—</span> }
                       </td>
+                      <td class="duty-n">{{ dutyCountFor(t.id) }}</td>
                       <td>
                         <span class="badge" [class.badge-green]="t.isActive" [class.badge-gray]="!t.isActive">
                           {{ t.isActive ? 'Available' : 'Inactive' }}
@@ -135,8 +142,8 @@ interface DutyRow {
           <!-- Duty roster: who's where -->
           <div class="section-header mt-24">
             <div>
-              <h2 class="section-title">Duty Roster</h2>
-              <p class="text-muted" style="font-size:0.85rem">Who's invigilating where, across all exams.</p>
+              <h2 class="section-title">Duty roster</h2>
+              <p class="text-muted" style="font-size:0.82rem">Who is invigilating where, across every live examination.</p>
             </div>
             @if (dutyDates().length) {
               <select class="form-control" style="width:auto" [ngModel]="filterDate()" (ngModelChange)="filterDate.set($event)">
@@ -149,13 +156,13 @@ interface DutyRow {
           </div>
 
           @if (filteredDuties().length === 0) {
-            <div class="glass-card empty-state">
+            <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="clipboard" [size]="30" /></div>
               <h3>No duties yet</h3>
               <p>Auto-allot invigilators from an exam's page and assignments appear here.</p>
             </div>
           } @else {
-            <div class="table-wrapper glass-card">
+            <div class="table-wrapper card">
               <table>
                 <thead>
                   <tr><th>Teacher</th><th>Exam</th><th>Room</th><th>Date</th><th>Time</th></tr>
@@ -179,11 +186,9 @@ interface DutyRow {
     </div>
   `,
   styles: [`
-    .admin-layout { display: flex; min-height: 100vh; }
-    .admin-main { flex: 1; overflow-y: auto; }
-    .page-content { padding: 32px; max-width: 1100px; }
-    h1 { font-size: 2.1rem; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
     .teacher-form { padding: 24px; }
+    .duty-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; }
     .toggle-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; margin-top: 4px; }
     .toggle-row input { accent-color: var(--accent-blue); width: 16px; height: 16px; margin-top: 2px; }
@@ -208,6 +213,11 @@ export class TeacherManagementComponent implements OnInit {
   saving = signal(false);
 
   form: Omit<Teacher, 'id'> = { name: '', department: '', email: '', phone: '', isActive: true };
+
+  availableCount = () => this.teachers().filter(t => t.isActive).length;
+  /** Duty documents are keyed by email, so staff without one get no portal login. */
+  withoutEmail = () => this.teachers().filter(t => !(t.email ?? '').trim()).length;
+  dutyCountFor = (id: string) => this.duties().filter(d => d.teacherId === id).length;
 
   ngOnInit() { this.load(); this.loadDuties(); }
 

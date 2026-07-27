@@ -11,6 +11,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { BrandMarkComponent } from '../../../shared/brand-mark/brand-mark.component';
 import { Duty } from '../../../models/duty.model';
 import { PublicSeat } from '../../../models/student.model';
+import { BRAND } from '../../../brand';
 
 @Component({
   selector: 'app-teacher-portal',
@@ -19,35 +20,45 @@ import { PublicSeat } from '../../../models/student.model';
   template: `
     <app-toast />
     <nav class="tp-nav">
-      <div class="tp-brand"><app-brand-mark [size]="32" /><span class="tp-title">Invigilator Portal</span></div>
+      <div class="tp-brand">
+        <app-brand-mark [size]="30" />
+        <span class="tp-words">
+          <span class="tp-title">{{ brand.name }}</span>
+          <span class="tp-desc">Invigilator portal</span>
+        </span>
+      </div>
       <div class="tp-user">
-        @if (email()) { <span class="text-muted">{{ email() }}</span> }
+        @if (email()) { <span class="tp-email text-muted">{{ email() }}</span> }
         @if (duties().length) {
-          <button class="btn btn-outline btn-sm" (click)="printDuties()"><app-icon name="printer" [size]="16" /> Print Duties</button>
+          <button class="btn btn-outline btn-sm" (click)="printDuties()"><app-icon name="printer" [size]="14" /> Print duties</button>
         }
-        <button class="btn btn-ghost btn-sm" (click)="logout()"><app-icon name="logout" [size]="16" /> Logout</button>
+        <button class="btn btn-ghost btn-sm" (click)="logout()"><app-icon name="logout" [size]="14" /> Sign out</button>
       </div>
     </nav>
 
     <main class="tp-main">
       @if (loading()) {
-        <app-loader message="Loading your duties..." />
+        <app-loader message="Loading your duties…" />
       } @else {
         <div class="tp-head fade-in">
-          <h1>My Invigilation Duties</h1>
-          <p class="text-muted">{{ duties().length }} {{ duties().length === 1 ? 'duty' : 'duties' }} assigned.</p>
+          <span class="eyebrow">Duty</span>
+          <h1 class="page-title">My invigilation duties</h1>
+          <p class="page-sub">
+            {{ duties().length }} {{ duties().length === 1 ? 'duty' : 'duties' }} assigned ·
+            {{ pendingCount() }} awaiting attendance
+          </p>
         </div>
 
         @if (duties().length === 0) {
-          <div class="glass-card empty-state">
-            <div class="empty-state-icon"><app-icon name="badge" [size]="30" /></div>
+          <div class="card empty-state">
+            <div class="empty-state-icon"><app-icon name="badge" [size]="26" /></div>
             <h3>No duties yet</h3>
-            <p>When your college allots you to an exam room, it appears here. Make sure you signed in with the email they registered for you.</p>
+            <p>When your examination office rosters you to a hall, the duty appears here. Make sure you signed in with the email they recorded for you.</p>
           </div>
         } @else {
           <div class="duty-list fade-in">
             @for (d of duties(); track d.id) {
-              <div class="duty-card glass-card">
+              <div class="duty-card card">
                 <div class="duty-top">
                   <div>
                     @if (d.collegeName) { <div class="duty-college">{{ d.collegeName }}</div> }
@@ -163,14 +174,27 @@ import { PublicSeat } from '../../../models/student.model';
     </div>
   `,
   styles: [`
-    .tp-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 64px; background: var(--glass-bg-strong); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); border-bottom: 1px solid var(--glass-border); }
-    .tp-brand { display: flex; align-items: center; gap: 10px; }
-    .tp-brand app-brand-mark { --mark-bg: var(--accent-blue); --mark-seat: oklch(1 0 0 / 0.6); --mark-ring: oklch(1 0 0 / 0.28); --mark-you: var(--accent-red); }
-    .tp-title { font-family: var(--font-head); font-weight: 600; font-size: 1.15rem; }
-    .tp-user { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
-    .tp-main { max-width: 860px; margin: 0 auto; padding: 28px 20px 64px; }
-    .tp-head h1 { font-size: 1.8rem; }
+    .tp-nav {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 0 24px; height: 60px;
+      background: var(--bg-card); border-bottom: 1px solid var(--border-color);
+    }
+    .tp-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .tp-brand app-brand-mark {
+      --mark-bg: var(--ink-face);
+      --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
+      --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
+      --mark-you: var(--accent-red);
+    }
+    .tp-words { display: flex; flex-direction: column; }
+    .tp-title { font-family: var(--font-head); font-weight: 600; letter-spacing: -0.025em; font-size: 1.2rem; line-height: 1.05; }
+    .tp-desc { font-family: var(--font-mono); font-size: 0.53rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+    .tp-user { display: flex; align-items: center; gap: 9px; font-size: 0.82rem; }
+    .tp-email { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tp-main { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 28px 20px 64px; }
     .tp-head { margin-bottom: 20px; }
+    @media (max-width: 620px) { .tp-nav { padding: 0 14px; } .tp-email { display: none; } }
 
     .duty-list { display: flex; flex-direction: column; gap: 14px; }
     .duty-card { padding: 18px 20px; }
@@ -189,7 +213,7 @@ import { PublicSeat } from '../../../models/student.model';
     .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
     .student-chip { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; text-align: left; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-secondary); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
     .student-chip:hover { border-color: var(--accent-blue); }
-    .student-chip.absent { background: oklch(0.50 0.19 25 / 0.12); border-color: oklch(0.50 0.19 25 / 0.45); }
+    .student-chip.absent { background: color-mix(in oklch, var(--accent-red) 12%, transparent); border-color: color-mix(in oklch, var(--accent-red) 45%, transparent); }
     .student-chip.absent .sc-ticket, .student-chip.absent .sc-name { text-decoration: line-through; opacity: 0.75; }
     .sc-ticket { font-size: 0.78rem; color: var(--accent-blue); font-weight: 600; }
     .sc-name { font-size: 0.8rem; }
@@ -230,6 +254,8 @@ export class TeacherPortalComponent implements OnInit {
   absentSet = signal<Set<string>>(new Set());
   printTarget = signal<string>('');
 
+  brand = BRAND;
+  pendingCount = () => this.duties().filter(d => !d.submitted).length;
   presentCount = () => this.roomStudents().length - this.absentSet().size;
   activeDuty = () => this.duties().find(d => d.id === this.activeDutyId()) ?? null;
 
@@ -250,8 +276,10 @@ export class TeacherPortalComponent implements OnInit {
     this.seatsLoading.set(true);
     try {
       const seats = await this.examService.getPublicExamSeats(d.examId);
+      // Match on hall id; fall back to the name for seating published before
+      // roomId was recorded. Names are not unique, ids are.
       const mine = seats
-        .filter(s => s.roomName === d.roomName)
+        .filter(s => (s.roomId ? s.roomId === d.roomId : s.roomName === d.roomName))
         .sort((a, b) => a.benchNumber - b.benchNumber || a.seatNumber - b.seatNumber);
       this.roomStudents.set(mine);
       this.absentSet.set(new Set(d.absentHallTickets ?? []));

@@ -10,7 +10,7 @@ import { RoomService } from '../../../services/room.service';
 import { SeatingService } from '../../../services/seating.service';
 import { FileUploadService } from '../../../services/file-upload.service';
 import { ToastService } from '../../../services/toast.service';
-import { Room } from '../../../models/room.model';
+import { Room, layoutSummary, roomCapacity } from '../../../models/room.model';
 import { Student } from '../../../models/student.model';
 import { ShuffleMode } from '../../../models/exam.model';
 import { firstValueFrom } from 'rxjs';
@@ -25,14 +25,18 @@ import { firstValueFrom } from 'rxjs';
       <app-admin-sidebar />
       <main class="admin-main">
         <div class="page-content fade-in">
-          <div class="section-header">
-            <h1>{{ editing() ? 'Edit Exam' : 'Create Exam' }}</h1>
-            <a routerLink="/admin/exams" class="btn btn-outline btn-sm"><app-icon name="arrow-left" [size]="15" /> Back</a>
-          </div>
+          <header class="page-head">
+            <div>
+              <span class="eyebrow">Register</span>
+              <h1 class="page-title">{{ editing() ? 'Edit examination' : 'New examination' }}</h1>
+              <p class="page-sub">Set the session, choose the halls, and load the candidate roster.</p>
+            </div>
+            <a routerLink="/admin/exams" class="btn btn-outline btn-sm"><app-icon name="arrow-left" [size]="14" /> Back</a>
+          </header>
 
           <div class="create-grid">
             <!-- Exam Info -->
-            <div class="glass-card form-section">
+            <div class="card form-section">
               <h3 class="form-section-title">Exam Details</h3>
               <div class="form-group">
                 <label class="form-label">Exam Name *</label>
@@ -66,7 +70,7 @@ import { firstValueFrom } from 'rxjs';
             </div>
 
             <!-- Seating Strategy -->
-            <div class="glass-card form-section">
+            <div class="card form-section">
               <h3 class="form-section-title">Seating Strategy</h3>
               <div class="form-group">
                 <label class="form-label">Allotment Mode</label>
@@ -93,7 +97,7 @@ import { firstValueFrom } from 'rxjs';
           </div>
 
           <!-- Room Selection -->
-          <div class="glass-card form-section mt-16">
+          <div class="card form-section mt-16">
             <h3 class="form-section-title">Select Rooms *</h3>
             @if (rooms().length === 0) {
               <p class="text-muted">No rooms available. <a routerLink="/admin/rooms">Add rooms first.</a></p>
@@ -102,11 +106,21 @@ import { firstValueFrom } from 'rxjs';
                 @for (room of rooms(); track room.id) {
                   <label class="room-select-item" [class.selected]="isRoomSelected(room.id)">
                     <input type="checkbox" [checked]="isRoomSelected(room.id)" (change)="toggleRoom(room.id)" />
+                    <span class="room-mini" aria-hidden="true">
+                      @for (col of room.columnLayout; track $index) {
+                        <span class="rm-col">
+                          @for (b of counter(col); track b) { <i></i> }
+                        </span>
+                      }
+                    </span>
                     <div class="room-select-info">
                       <span class="room-select-name">{{ room.name }}</span>
-                      @if (room.floor) { <span class="text-muted" style="font-size:0.8rem">{{ room.floor }}</span> }
+                      <span class="room-select-shape mono">{{ layoutSummary(room.columnLayout, room.seatsPerBench) }}</span>
                     </div>
-                    <span class="badge badge-blue">{{ room.totalCapacity }} seats</span>
+                    <span class="room-select-cap">
+                      <span class="rsc-value mono">{{ effectiveSeats(room) }}</span>
+                      <span class="rsc-label">seats</span>
+                    </span>
                   </label>
                 }
               </div>
@@ -126,7 +140,7 @@ import { firstValueFrom } from 'rxjs';
           </div>
 
           <!-- Student Upload -->
-          <div class="glass-card form-section mt-16">
+          <div class="card form-section mt-16">
             <h3 class="form-section-title">{{ editing() ? 'Replace Students' : 'Upload Students' }}</h3>
             <p class="text-muted mb-16" style="font-size:0.875rem">
               Upload a CSV or Excel file. Columns: <code>Hall Ticket No, Name, Department (optional), Section (optional)</code>
@@ -187,8 +201,7 @@ import { firstValueFrom } from 'rxjs';
     </div>
   `,
   styles: [`
-    .admin-layout { display: flex; min-height: 100vh; }
-    .admin-main { flex: 1; overflow-y: auto; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
     .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 900px) { .create-grid { grid-template-columns: 1fr; } }
     .form-section { padding: 24px; }
@@ -201,13 +214,21 @@ import { firstValueFrom } from 'rxjs';
 
     .room-select-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
     .room-select-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; }
-    .room-select-item:hover { border-color: oklch(0.42 0.13 274 / 0.4); background: oklch(0.42 0.13 274 / 0.04); }
-    .room-select-item.selected { border-color: var(--accent-blue); background: oklch(0.42 0.13 274 / 0.08); }
+    .room-select-item:hover { border-color: color-mix(in oklch, var(--accent-blue) 40%, transparent); background: color-mix(in oklch, var(--accent-blue) 4%, transparent); }
+    .room-select-item.selected { border-color: var(--accent-blue); background: color-mix(in oklch, var(--accent-blue) 8%, transparent); }
     .room-select-item input[type=checkbox] { accent-color: var(--accent-blue); width: 16px; height: 16px; }
-    .room-select-info { flex: 1; display: flex; flex-direction: column; }
-    .room-select-name { font-size: 0.875rem; font-weight: 500; }
-    .capacity-info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); padding: 10px 12px; background: oklch(0.50 0.13 150 / 0.10); border-radius: 6px; border: 1px solid oklch(0.50 0.13 150 / 0.25); }
-    .capacity-info.short { background: oklch(0.50 0.19 25 / 0.10); border-color: oklch(0.50 0.19 25 / 0.3); }
+    .room-select-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .room-select-name { font-size: 0.9rem; font-weight: 500; }
+    .room-select-shape { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.02em; }
+    .room-mini { display: flex; gap: 3px; align-items: flex-start; flex-shrink: 0; }
+    .rm-col { display: flex; flex-direction: column; gap: 2px; }
+    .rm-col i { display: block; width: 9px; height: 3px; border-radius: 1px; background: var(--border-strong); }
+    .room-select-item.selected .rm-col i { background: color-mix(in oklch, var(--accent-blue) 55%, transparent); }
+    .room-select-cap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; }
+    .rsc-value { font-size: 1.02rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .rsc-label { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+    .capacity-info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); padding: 10px 12px; background: color-mix(in oklch, var(--accent-green) 10%, transparent); border-radius: 6px; border: 1px solid color-mix(in oklch, var(--accent-green) 25%, transparent); }
+    .capacity-info.short { background: color-mix(in oklch, var(--accent-red) 10%, transparent); border-color: color-mix(in oklch, var(--accent-red) 30%, transparent); }
     .cap-warn { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-red); font-weight: 600; }
     .cap-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-green); font-weight: 600; }
 
@@ -238,11 +259,18 @@ export class ExamCreateComponent implements OnInit {
   editing = signal(false);
   examId = '';
   selectedRooms: Set<string> = new Set();
+  private wasSeated = false;
+  private originalPlan = '';
 
   form = {
     name: '', subjectCode: '', department: '', date: '', startTime: '09:00', endTime: '12:00',
     shuffleMode: 'sequential' as ShuffleMode, spacing: false, teachersPerRoom: 1
   };
+
+  layoutSummary = layoutSummary;
+  counter = (n: number) => Array.from({ length: Math.min(n, 14) }, (_, i) => i);
+  /** Seats this hall contributes under the current gap-seat setting. */
+  effectiveSeats = (room: Room) => roomCapacity(room.columnLayout, room.seatsPerBench, this.form.spacing);
 
   modeHint = () => ({
     sequential: 'Students keep the order they were uploaded in.',
@@ -296,6 +324,17 @@ export class ExamCreateComponent implements OnInit {
     };
     this.selectedRooms = new Set(exam.selectedRooms);
     this.existingStudents.set(students.length);
+    this.wasSeated = students.some(s => s.isSeated);
+    this.originalPlan = this.planFingerprint();
+  }
+
+  /** Anything that changes where a candidate sits, collapsed to one string. */
+  private planFingerprint(): string {
+    return [
+      [...this.selectedRooms].sort().join(','),
+      this.form.shuffleMode,
+      String(this.form.spacing)
+    ].join('|');
   }
 
   private toDateInput(d: Date): string {
@@ -354,7 +393,13 @@ export class ExamCreateComponent implements OnInit {
         if (this.students().length > 0) {
           await this.examService.saveStudents(this.examId, this.students());
         }
-        this.toastService.success('Exam updated.');
+        // Changing halls, mode or the gap rule leaves the existing allotment
+        // stale — say so rather than letting it silently disagree with the plan.
+        if (this.wasSeated && this.students().length === 0 && this.planFingerprint() !== this.originalPlan) {
+          this.toastService.info('Saved. The seating plan changed — re-run the allotment.');
+        } else {
+          this.toastService.success('Examination updated.');
+        }
         this.router.navigate(['/admin/exams', this.examId]);
       } else {
         const examId = await this.examService.createExam({ ...payload, status: 'draft', invigilators: {} });

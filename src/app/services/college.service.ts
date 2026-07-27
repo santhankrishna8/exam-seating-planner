@@ -8,17 +8,30 @@ export class CollegeService {
   private firestore = inject(Firestore);
   private auth = inject(AuthService);
 
+  /**
+   * Cached per uid, because the route guards ask on every admin navigation.
+   * Keying by uid is the whole invalidation story: a different account is a
+   * different key, and a college document is written once at registration.
+   */
+  private cache = new Map<string, College | null>();
+
   async getMyCollege(): Promise<College | null> {
     const uid = this.auth.currentUid;
     if (!uid) return null;
+    if (this.cache.has(uid)) return this.cache.get(uid)!;
+
     const snap = await getDoc(doc(this.firestore, 'colleges', uid));
-    if (!snap.exists()) return null;
     const d = snap.data() as any;
-    return {
-      id: snap.id,
-      name: d['name'],
-      code: d['code'],
-      createdAt: d['createdAt']?.toDate() ?? new Date()
-    };
+    const college: College | null = snap.exists()
+      ? { id: snap.id, name: d['name'], code: d['code'], createdAt: d['createdAt']?.toDate() ?? new Date() }
+      : null;
+
+    this.cache.set(uid, college);
+    return college;
+  }
+
+  /** An account belongs to an examination office if it owns a college document. */
+  async isOffice(): Promise<boolean> {
+    return (await this.getMyCollege()) !== null;
   }
 }

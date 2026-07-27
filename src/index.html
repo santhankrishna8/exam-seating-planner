@@ -1,19 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light-theme">
 <head>
   <meta charset="utf-8">
-  <title>Seatly · Find your exam seat</title>
-  <meta name="description" content="Seatly — enter your hall ticket number to find your exam room, bench and seat. No login required.">
-  <meta name="theme-color" content="#000000">
-  <meta property="og:title" content="Seatly · Find your exam seat">
-  <meta property="og:description" content="Enter your hall ticket number to find your exam room, bench and seat.">
+  <title>Invigil · Examination Control System</title>
+  <meta name="description" content="Invigil allots exam halls, benches and seats, publishes the register, and lets any student find their seat with a hall ticket number — no login.">
+  <meta name="theme-color" content="#f4f2ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1e23" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="Invigil · Examination Control System">
+  <meta property="og:description" content="Hall allotment, invigilator duty rosters and public seat lookup for examinations.">
   <meta property="og:type" content="website">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Familjen+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Typography is Helvetica/Arial + the platform monospace: no webfont request,
+       no third-party connection, and no flash of unstyled text. -->
+  <script>
+    // Paint the saved theme before first render so the page never flashes.
+    (function () {
+      try {
+        var dark = localStorage.getItem('theme') === 'dark';
+        document.documentElement.classList.toggle('light-theme', !dark);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

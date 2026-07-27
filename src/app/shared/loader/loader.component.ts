@@ -6,28 +6,23 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="loader-wrap" [class.overlay]="overlay">
-      <div class="spinner"></div>
+    <div class="loader" [class.overlay]="overlay" role="status" [attr.aria-label]="message || 'Loading'">
+      <div class="ruler" aria-hidden="true"><span></span></div>
       @if (message) { <p class="loader-msg">{{ message }}</p> }
     </div>
   `,
   styles: [`
-    .loader-wrap {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 12px; padding: 40px;
+    .loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 64px 24px; }
+    .loader.overlay { position: fixed; inset: 0; z-index: 999; background: color-mix(in oklch, var(--bg-primary) 78%, transparent); }
+    /* A ruling being drawn, not a spinner — it belongs to the register motif. */
+    .ruler { width: 168px; height: 2px; background: var(--border-color); border-radius: 2px; overflow: hidden; }
+    .ruler span { display: block; width: 40%; height: 100%; background: var(--accent-blue); animation: rule 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+    @keyframes rule {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
     }
-    .loader-wrap.overlay {
-      position: fixed; inset: 0; background: oklch(0.55 0.02 274 / 0.32); z-index: 999;
-    }
-    .spinner {
-      width: 42px; height: 42px;
-      border: 3px solid var(--border-color);
-      border-top-color: var(--accent-blue);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    .loader-msg { color: var(--text-secondary); font-size: 0.875rem; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-msg { color: var(--text-muted); font-size: 0.83rem; }
+    @media (prefers-reduced-motion: reduce) { .ruler span { animation: none; width: 100%; opacity: 0.5; } }
   `]
 })
 export class LoaderComponent {

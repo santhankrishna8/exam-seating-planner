@@ -1,81 +1,108 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { HeroWaveComponent } from '../hero-wave/hero-wave.component';
+import { HallDiagramComponent } from '../hall-diagram/hall-diagram.component';
 import { IconComponent, IconName } from '../../../shared/icon/icon.component';
+import { BrandMarkComponent } from '../../../shared/brand-mark/brand-mark.component';
+import { BRAND } from '../../../brand';
+import { normalizeHallTicket } from '../../../utils/hall-ticket';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent, HeroWaveComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NavbarComponent, HallDiagramComponent, IconComponent, BrandMarkComponent],
   template: `
     <app-navbar />
 
     <main class="landing">
-      <!-- Hero with seat-map background -->
+      <!-- ── Hero ── -->
       <section class="hero">
-        <app-hero-wave />
-        <div class="hero-overlay"></div>
-        <div class="hero-content fade-in">
-          <span class="hero-tag">
-            <span class="tag-dot"></span>
-            Examination Seating Register
-          </span>
+        <div class="hero-inner">
+          <div class="hero-copy fade-in">
+            <span class="eyebrow hero-eyebrow">Public seat lookup</span>
 
-          <h1 class="hero-title">
-            Find your exam seat
-            <span class="title-accent">in one search.</span>
-          </h1>
+            <h1 class="hero-title">
+              Every seat, on the
+              <em>record.</em>
+            </h1>
 
-          <p class="hero-sub">
-            Enter your hall ticket number to locate your room, bench and seat —
-            no login, no waiting in front of the notice board.
-          </p>
+            <p class="hero-sub">
+              {{ brand.name }} allots examination halls bench by bench, rosters the invigilators,
+              and publishes the register. Students find their seat with a hall ticket number —
+              nothing to install, no account to create.
+            </p>
 
-          <form class="search-card" (ngSubmit)="search()">
-            <label class="search-label" for="ht">Hall Ticket Number</label>
-            <div class="search-row">
-              <span class="search-affix"><app-icon name="search" [size]="18" /></span>
-              <input
-                id="ht"
-                class="search-input mono"
-                type="text"
-                placeholder="21WH1A0501"
-                [(ngModel)]="hallTicket"
-                name="hallTicket"
-                autocomplete="off"
-                autocapitalize="characters"
-                spellcheck="false"
-              />
-              <button type="submit" class="btn btn-primary btn-search" [disabled]="!hallTicket.trim()">
-                Find Seat
-                <app-icon name="arrow-right" [size]="17" />
-              </button>
-            </div>
-            @if (error()) {
-              <p class="search-error">{{ error() }}</p>
-            } @else {
-              <p class="search-hint">Tip: hall tickets aren't case-sensitive here.</p>
-            }
-          </form>
+            <form class="lookup" (ngSubmit)="search()" novalidate>
+              <label class="lookup-label" for="ht">Hall ticket number</label>
+              <div class="lookup-row">
+                <span class="lookup-affix"><app-icon name="search" [size]="17" /></span>
+                <input
+                  id="ht"
+                  class="lookup-input mono"
+                  type="text"
+                  inputmode="text"
+                  placeholder="21WH1A0501"
+                  [(ngModel)]="hallTicket"
+                  (ngModelChange)="error.set('')"
+                  name="hallTicket"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                  [attr.aria-invalid]="error() ? 'true' : null"
+                  aria-describedby="lookup-note"
+                />
+                <button type="submit" class="btn btn-primary lookup-go">
+                  Find my seat
+                  <app-icon name="arrow-right" [size]="16" />
+                </button>
+              </div>
+              <p id="lookup-note" class="lookup-note" [class.is-error]="error()">
+                {{ error() || 'Case and spacing are ignored. Results cover every published examination.' }}
+              </p>
+            </form>
 
-          <ul class="hero-trust">
-            @for (t of trust; track t.label) {
-              <li><app-icon [name]="t.icon" [size]="16" /> {{ t.label }}</li>
-            }
-          </ul>
+            <ul class="assurances">
+              @for (a of assurances; track a.label) {
+                <li><app-icon [name]="a.icon" [size]="15" /> {{ a.label }}</li>
+              }
+            </ul>
+          </div>
+
+          <div class="hero-visual fade-in">
+            <app-hall-diagram />
+          </div>
         </div>
       </section>
 
-      <!-- How it works — ledger -->
-      <section class="how-it-works">
-        <div class="hiw-inner">
-          <div class="hiw-head">
-            <span class="hiw-eyebrow">The process</span>
-            <h2 class="hiw-title">Three steps to your seat</h2>
+      <!-- ── What the office runs ── -->
+      <section class="capabilities">
+        <div class="cap-inner">
+          <header class="cap-head">
+            <span class="eyebrow">For the examination office</span>
+            <h2 class="cap-title">One register, from allotment to attendance</h2>
+          </header>
+
+          <div class="cap-grid">
+            @for (c of capabilities; track c.title) {
+              <article class="cap">
+                <span class="cap-index mono">{{ c.index }}</span>
+                <h3 class="cap-name">{{ c.title }}</h3>
+                <p class="cap-text">{{ c.text }}</p>
+              </article>
+            }
           </div>
+        </div>
+      </section>
+
+      <!-- ── Procedure ── -->
+      <section class="procedure">
+        <div class="proc-inner">
+          <header class="proc-head">
+            <span class="eyebrow">Procedure</span>
+            <h2 class="proc-title">Three steps for the student</h2>
+          </header>
           <ol class="steps">
             @for (step of steps; track step.num) {
               <li class="step">
@@ -84,141 +111,182 @@ import { IconComponent, IconName } from '../../../shared/icon/icon.component';
                   <h3>{{ step.title }}</h3>
                   <p>{{ step.desc }}</p>
                 </div>
-                <span class="step-icon"><app-icon [name]="step.icon" [size]="22" /></span>
               </li>
             }
           </ol>
         </div>
       </section>
 
-      <footer class="landing-footer">
-        <span class="footer-ref">REF · SEATLY / PUBLIC LOOKUP</span>
-        <p>Built for colleges · No login required for students</p>
+      <!-- ── Footer ── -->
+      <footer class="site-foot">
+        <div class="foot-inner">
+          <div class="foot-brand">
+            <app-brand-mark [size]="28" />
+            <div>
+              <div class="foot-name">{{ brand.name }}</div>
+              <div class="foot-desc">{{ brand.descriptor }}</div>
+            </div>
+          </div>
+          <nav class="foot-links" aria-label="Footer">
+            <a routerLink="/teacher/login">Invigilator portal</a>
+            <a routerLink="/admin/login">Examination office</a>
+            <a routerLink="/admin/register">Register an institution</a>
+          </nav>
+        </div>
+        <div class="foot-rule"></div>
+        <div class="foot-stamp mono">{{ brand.stamp }} · PUBLIC LOOKUP</div>
       </footer>
     </main>
   `,
   styles: [`
-    .landing { min-height: 100vh; display: flex; flex-direction: column; }
+    .landing { position: relative; z-index: 1; }
 
-    .hero {
-      position: relative; flex: 1;
-      display: flex; align-items: center; justify-content: center;
-      padding: 116px 24px 90px; overflow: hidden; min-height: 660px;
+    /* ── Hero ── */
+    .hero { padding: 64px 24px 72px; border-bottom: 1px solid var(--border-color); }
+    .hero-inner {
+      max-width: 1220px; margin: 0 auto;
+      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 56px; align-items: center;
     }
-    .hero-overlay {
-      position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(to bottom, transparent 0%, var(--bg-primary) 96%);
+    @media (max-width: 980px) {
+      .hero { padding: 44px 20px 52px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 38px; }
+      .hero-visual { order: -1; }
     }
-    .hero-content { position: relative; z-index: 2; max-width: 660px; width: 100%; text-align: center; }
 
-    .hero-tag {
-      display: inline-flex; align-items: center; gap: 9px;
-      padding: 6px 14px 6px 12px; border-radius: 999px;
-      background: var(--bg-card); color: var(--text-secondary);
-      font-family: var(--font-mono);
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-      margin-bottom: 26px; border: 1px solid var(--border-strong);
-    }
-    .tag-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent-red); box-shadow: 0 0 0 0 var(--accent-red); animation: tagPulse 2.6s ease-in-out infinite; }
-    @keyframes tagPulse { 0%, 100% { box-shadow: 0 0 0 0 oklch(0.55 0.19 25 / 0.5); } 50% { box-shadow: 0 0 0 5px oklch(0.55 0.19 25 / 0); } }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; color: var(--accent-red); }
+    .hero-eyebrow::before { content: ''; width: 18px; height: 1px; background: currentColor; }
 
     .hero-title {
-      font-family: var(--font-head);
-      font-size: clamp(2.6rem, 6vw, 4.4rem); font-weight: 600;
-      margin-bottom: 20px; line-height: 1.02; letter-spacing: -0.025em;
+      font-size: clamp(2.7rem, 5.6vw, 4.3rem);
+      line-height: 0.98; letter-spacing: -0.025em; margin-bottom: 20px;
     }
-    .title-accent { display: block; color: var(--accent-blue); font-style: italic; }
+    .hero-title em { font-style: normal; color: var(--accent-red); }
 
-    .hero-sub { color: var(--text-secondary); font-size: 1.1rem; line-height: 1.55; margin: 0 auto 36px; max-width: 500px; }
+    .hero-sub { color: var(--text-secondary); font-size: 1.03rem; line-height: 1.6; max-width: 52ch; margin-bottom: 30px; }
 
-    .search-card {
-      padding: 18px; width: 100%; text-align: left;
-      background: var(--glass-bg-strong);
-      -webkit-backdrop-filter: blur(20px) saturate(1.5);
-      backdrop-filter: blur(20px) saturate(1.5);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg); box-shadow: var(--shadow-lg), var(--glass-sheen);
+    .lookup {
+      padding: 16px; border-radius: var(--radius-lg);
+      background: var(--bg-card); border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-md);
     }
-    .search-label { display: block; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 10px; }
-    .search-row { display: flex; align-items: stretch; gap: 10px; position: relative; }
-    .search-affix {
-      position: absolute; left: 14px; top: 0; bottom: 0; display: flex; align-items: center;
+    .lookup-label {
+      display: block; font-family: var(--font-mono); font-size: 0.63rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted); margin-bottom: 9px;
+    }
+    .lookup-row { display: flex; align-items: stretch; gap: 8px; position: relative; }
+    .lookup-affix {
+      position: absolute; left: 12px; top: 0; height: 46px; display: flex; align-items: center;
       color: var(--text-muted); pointer-events: none; z-index: 1;
     }
-    .search-input {
-      flex: 1; min-width: 0;
-      background: var(--bg-secondary); border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm); color: var(--text-primary);
-      font-size: 1.05rem; padding: 14px 16px 14px 42px; letter-spacing: 0.08em;
-      outline: none; transition: border-color var(--transition), box-shadow var(--transition);
+    .lookup-input {
+      flex: 1; min-width: 0; height: 46px;
+      background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 1rem; letter-spacing: 0.09em;
+      padding: 0 14px 0 38px; outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
     }
-    .search-input::placeholder { color: var(--text-muted); }
-    .search-input:focus { border-color: var(--accent-blue); box-shadow: var(--ring-focus); }
-    .btn-search { flex-shrink: 0; font-size: 0.95rem; padding: 14px 24px; gap: 8px; }
-    .search-error { color: var(--accent-red); font-size: 0.86rem; margin-top: 12px; font-weight: 500; }
-    .search-hint { color: var(--text-muted); font-size: 0.82rem; margin-top: 12px; }
-    @media (max-width: 520px) {
-      .search-row { flex-direction: column; }
-      .search-affix { top: 0; height: 52px; bottom: auto; }
-      .btn-search { justify-content: center; }
+    .lookup-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+    .lookup-input:focus { border-color: var(--accent-blue); box-shadow: var(--ring-focus); }
+    .lookup-go { flex-shrink: 0; height: 46px; padding: 0 20px; font-size: 0.92rem; }
+    .lookup-note { margin-top: 10px; font-size: 0.78rem; color: var(--text-muted); }
+    .lookup-note.is-error { color: var(--accent-red); font-weight: 500; }
+    @media (max-width: 540px) {
+      .lookup-row { flex-direction: column; }
+      .lookup-go { width: 100%; }
     }
 
-    .hero-trust {
-      list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px;
-      margin-top: 26px; padding: 0;
-    }
-    .hero-trust li { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
-    .hero-trust app-icon { color: var(--accent-green); }
+    .assurances { list-style: none; display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 22px 0 0; padding: 0; }
+    .assurances li { display: inline-flex; align-items: center; gap: 7px; font-size: 0.81rem; color: var(--text-muted); }
+    .assurances app-icon { color: var(--accent-green); }
 
-    .how-it-works { position: relative; padding: 84px 24px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); }
-    .hiw-inner { max-width: 760px; margin: 0 auto; }
-    .hiw-head { margin-bottom: 30px; }
-    .hiw-eyebrow { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent-blue); }
-    .hiw-title { font-size: clamp(1.6rem, 3vw, 2.1rem); margin-top: 8px; letter-spacing: -0.02em; }
-
-    .steps { list-style: none; display: flex; flex-direction: column; margin: 0; padding: 0; }
-    .step { display: flex; align-items: center; gap: 22px; padding: 24px 4px; border-top: 1px solid var(--border-color); }
-    .step:first-child { border-top: none; }
-    .step-num { font-family: var(--font-head); font-size: 2rem; font-weight: 600; font-style: italic; color: var(--accent-blue); line-height: 1; min-width: 1.5em; }
-    .step-body { flex: 1; }
-    .step-body h3 { font-size: 1.12rem; margin-bottom: 5px; }
-    .step-body p { color: var(--text-secondary); font-size: 0.92rem; }
-    .step-icon {
-      flex-shrink: 0; width: 46px; height: 46px; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: var(--radius-md); color: var(--accent-blue);
-      background: oklch(0.42 0.13 274 / 0.08); border: 1px solid oklch(0.42 0.13 274 / 0.18);
+    /* ── Capabilities ── */
+    .capabilities { padding: 68px 24px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+    .cap-inner { max-width: 1220px; margin: 0 auto; }
+    .cap-head { margin-bottom: 34px; max-width: 46ch; }
+    .cap-title { font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -0.018em; margin-top: 9px; }
+    .cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0; border-top: 1px solid var(--border-color); }
+    .cap { padding: 26px 26px 26px 0; border-right: 1px solid var(--border-color); }
+    .cap:last-child { border-right: 0; }
+    @media (min-width: 760px) { .cap + .cap { padding-left: 26px; } }
+    @media (max-width: 759px) {
+      .cap { border-right: 0; border-bottom: 1px solid var(--border-color); padding: 22px 0; }
+      .cap:last-child { border-bottom: 0; }
     }
-    @media (max-width: 520px) { .step-icon { display: none; } }
+    .cap-index { display: block; font-size: 0.66rem; letter-spacing: 0.16em; color: var(--accent-red); margin-bottom: 12px; }
+    .cap-name { font-size: 1.22rem; margin-bottom: 8px; letter-spacing: -0.012em; }
+    .cap-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
 
-    .landing-footer {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      text-align: center; padding: 32px; color: var(--text-muted);
-      font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.04em;
-      border-top: 1px solid var(--border-color);
+    /* ── Procedure ── */
+    .procedure { padding: 66px 24px; }
+    .proc-inner { max-width: 780px; margin: 0 auto; }
+    .proc-head { margin-bottom: 22px; }
+    .proc-title { font-size: clamp(1.5rem, 2.6vw, 2rem); letter-spacing: -0.018em; margin-top: 9px; }
+    .steps { list-style: none; margin: 0; padding: 0; }
+    .step { display: flex; align-items: baseline; gap: 22px; padding: 22px 0; border-top: 1px solid var(--border-color); }
+    .step-num { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 500; color: var(--accent-red); line-height: 1.4; min-width: 2.2em; letter-spacing: 0.02em; }
+    .step-body h3 { font-family: var(--font-body); font-size: 1.02rem; font-weight: 600; margin-bottom: 4px; }
+    .step-body p { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* ── Footer ── */
+    .site-foot { padding: 34px 24px 26px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); }
+    .foot-inner { max-width: 1220px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .foot-brand { display: flex; align-items: center; gap: 11px; }
+    .foot-brand app-brand-mark {
+      --mark-bg: var(--ink-face);
+      --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
+      --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
+      --mark-you: var(--accent-red);
     }
-    .footer-ref { font-size: 0.66rem; letter-spacing: 0.18em; color: var(--text-muted); opacity: 0.65; }
+    .foot-name { font-family: var(--font-head); font-weight: 600; letter-spacing: -0.025em; font-size: 1.1rem; line-height: 1.1; }
+    .foot-desc { font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+    .foot-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .foot-links a { font-size: 0.83rem; color: var(--text-secondary); }
+    .foot-links a:hover { color: var(--text-primary); }
+    .foot-rule { max-width: 1220px; margin: 22px auto 12px; height: 1px; background: var(--border-color); }
+    .foot-stamp { max-width: 1220px; margin: 0 auto; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-muted); opacity: 0.75; }
   `]
 })
 export class LandingComponent {
   private router = inject(Router);
+  brand = BRAND;
   hallTicket = '';
   error = signal('');
 
-  trust: { icon: IconName; label: string }[] = [
+  assurances: { icon: IconName; label: string }[] = [
     { icon: 'check-circle', label: 'No account needed' },
-    { icon: 'bolt', label: 'Instant results' },
+    { icon: 'bolt', label: 'Results in seconds' },
     { icon: 'printer', label: 'Printable seat slip' }
   ];
 
-  steps: { num: string; icon: IconName; title: string; desc: string }[] = [
-    { num: '1', icon: 'document', title: 'Enter your hall ticket', desc: 'Type your hall ticket number in the search box above.' },
-    { num: '2', icon: 'search', title: 'We search every published exam', desc: 'The register is scanned for your number across all current exams.' },
-    { num: '3', icon: 'pin', title: 'See your exact seat', desc: 'Room, floor, bench and seat position — ready to print.' }
+  capabilities = [
+    {
+      index: '01',
+      title: 'Hall allotment',
+      text: 'Describe each hall as it really is — columns of benches of differing depths — and seats are filled down the columns, never across a rectangle that does not exist.'
+    },
+    {
+      index: '02',
+      title: 'Invigilation duty',
+      text: 'Duties are spread by workload and department, a teacher is never booked twice at the same hour, and each invigilator gets their own portal and attendance sheet.'
+    },
+    {
+      index: '03',
+      title: 'Publication',
+      text: 'Publishing writes a read-only register: students look up a seat, invigilators mark absentees, and the office reconciles attendance back into the record.'
+    }
+  ];
+
+  steps = [
+    { num: '1', title: 'Enter the hall ticket number', desc: 'Type it into the field above — spacing and case do not matter.' },
+    { num: '2', title: 'Every published examination is searched', desc: 'The register is scanned across all live examinations at once.' },
+    { num: '3', title: 'Read off hall, bench and seat', desc: 'The exact position is shown with a printable slip to carry in.' }
   ];
 
   search() {
-    const ht = this.hallTicket.trim();
-    if (!ht) { this.error.set('Please enter your hall ticket number.'); return; }
+    const ht = normalizeHallTicket(this.hallTicket);
+    if (!ht) { this.error.set('Enter your hall ticket number to search.'); return; }
+    if (ht.length < 4) { this.error.set('That looks too short for a hall ticket number.'); return; }
     this.error.set('');
     this.router.navigate(['/search'], { queryParams: { q: ht } });
   }

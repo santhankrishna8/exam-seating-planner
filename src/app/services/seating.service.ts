@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Room, roomRowLayout } from '../models/room.model';
+import { Room, roomColumns, roomCapacity, seatsPerBenchEffective } from '../models/room.model';
 import { Student } from '../models/student.model';
 import { ShuffleMode } from '../models/exam.model';
 
@@ -11,25 +11,22 @@ export interface SeatingOptions {
 @Injectable({ providedIn: 'root' })
 export class SeatingService {
 
-  /** Effective usable seats on a bench given the spacing rule. */
-  private seatsPerBenchEff(seatsPerBench: number, spacing: boolean): number {
-    return spacing ? Math.ceil(seatsPerBench / 2) : seatsPerBench;
-  }
-
   /** Total seats a room set can hold under the given spacing rule. */
   capacityOf(rooms: Room[], spacing = false): number {
-    return rooms.reduce((sum, r) => sum + r.benchCount * this.seatsPerBenchEff(r.seatsPerBench, spacing), 0);
+    return rooms.reduce((sum, r) => sum + roomCapacity(roomColumns(r), r.seatsPerBench, spacing), 0);
   }
 
   assignSeats(students: Student[], rooms: Room[], options: SeatingOptions | ShuffleMode): Student[] {
-    // Back-compat: a bare ShuffleMode string still works.
     const opts: SeatingOptions = typeof options === 'string' ? { mode: options } : options;
     const spacing = !!opts.spacing;
     const seatStep = spacing ? 2 : 1;
 
     const totalCapacity = this.capacityOf(rooms, spacing);
     if (students.length > totalCapacity) {
-      throw new Error(`Not enough capacity. Need ${students.length} seats but only ${totalCapacity} available${spacing ? ' (with spacing on)' : ''}.`);
+      throw new Error(
+        `Not enough capacity. ${students.length} students but only ${totalCapacity} seats available` +
+        `${spacing ? ' with the gap-seat rule on' : ''}.`
+      );
     }
 
     const ordered = this.orderStudents(students, opts.mode);
@@ -37,31 +34,35 @@ export class SeatingService {
     let idx = 0;
     const assigned: Student[] = [];
 
-    // Column-major fill: down the entire left column of benches (row 1 → last),
-    // then the next column. Within a bench, seats fill left→right (skipping one
-    // when spacing is on, so neighbours aren't shoulder-to-shoulder).
+    // Column-major fill. Benches are numbered the same way they are filled:
+    // straight down column 1 (front → back), then column 2, and so on. Within a
+    // bench, seats run left → right, skipping one when the gap rule is on so
+    // neighbours are never shoulder-to-shoulder.
     outer:
     for (const room of rooms) {
-      const layout = roomRowLayout(room);           // benches in each row (uneven-aware)
-      const maxCols = layout.length ? Math.max(...layout) : 0;
-      const prefix: number[] = [];                  // bench-number offset where each row begins
-      let acc = 0;
-      for (let r = 0; r < layout.length; r++) { prefix[r] = acc; acc += layout[r]; }
-
-      for (let c = 0; c < maxCols; c++) {
-        for (let r = 0; r < layout.length; r++) {
-          if (c >= layout[r]) continue;             // this row is shorter than column c
-          const bench = prefix[r] + c + 1;
+      const columns = roomColumns(room);
+      let bench = 0;
+      for (const columnLength of columns) {
+        for (let r = 0; r < columnLength; r++) {
+          bench++;
           for (let seat = 1; seat <= room.seatsPerBench; seat += seatStep) {
             if (idx >= ordered.length) break outer;
-            assigned.push({ ...ordered[idx], assignedRoom: room.id, assignedBench: bench, assignedSeat: seat, isSeated: true });
+            assigned.push({
+              ...ordered[idx],
+              assignedRoom: room.id,
+              assignedBench: bench,
+              assignedSeat: seat,
+              isSeated: true
+            });
             idx++;
           }
         }
       }
     }
 
-    const unseated = ordered.slice(idx).map(s => ({ ...s, isSeated: false }));
+    const unseated = ordered.slice(idx).map(s => ({
+      ...s, assignedRoom: undefined, assignedBench: undefined, assignedSeat: undefined, isSeated: false
+    }));
     return [...assigned, ...unseated];
   }
 
@@ -106,3 +107,6 @@ export class SeatingService {
     return a;
   }
 }
+
+/** Kept exported for callers that only need the per-bench seat maths. */
+export { seatsPerBenchEffective };

@@ -3,8 +3,10 @@ import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc, getDocs, serverTimestamp
 } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
-import { Room } from '../models/room.model';
+import { Room, roomColumns, benchCountOf } from '../models/room.model';
 import { Observable, from, map } from 'rxjs';
+
+export type RoomDraft = Omit<Room, 'id' | 'benchCount' | 'totalCapacity'>;
 
 @Injectable({ providedIn: 'root' })
 export class RoomService {
@@ -18,25 +20,22 @@ export class RoomService {
 
   getRooms(): Observable<Room[]> {
     return from(getDocs(this.roomsCol())).pipe(
-      map(snap => snap.docs.map(d => this.mapRoom(d.id, d.data() as any)))
+      map(snap => snap.docs
+        .map(d => this.mapRoom(d.id, d.data() as any))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })))
     );
   }
 
+  /** Reads both current column-shaped documents and legacy row-shaped ones. */
   private mapRoom(id: string, data: any): Room {
-    const layout: number[] | undefined = Array.isArray(data['rowLayout']) && data['rowLayout'].length
-      ? data['rowLayout'].map((n: any) => Number(n) || 0)
-      : undefined;
-    const rowsCount = layout ? layout.length : (data['rowsCount'] ?? 1);
-    const benchesPerRow = layout ? Math.max(...layout) : (data['benchesPerRow'] ?? data['benchCount'] ?? 30);
-    const benchCount = layout ? layout.reduce((a, b) => a + b, 0) : (data['benchCount'] ?? rowsCount * benchesPerRow);
-    const seatsPerBench = data['seatsPerBench'] ?? 2;
+    const columnLayout = roomColumns(data);
+    const seatsPerBench = Math.max(1, Number(data['seatsPerBench']) || 2);
+    const benchCount = benchCountOf(columnLayout);
     return {
       id,
-      name: data['name'],
+      name: data['name'] ?? '',
       floor: data['floor'] ?? '',
-      rowsCount,
-      benchesPerRow,
-      rowLayout: layout,
+      columnLayout,
       benchCount,
       seatsPerBench,
       totalCapacity: benchCount * seatsPerBench,
@@ -44,42 +43,33 @@ export class RoomService {
     };
   }
 
-  // Sum of an optional uneven layout, else uniform rows×perRow.
-  private benchCountFor(room: { rowsCount: number; benchesPerRow: number; rowLayout?: number[] }): number {
-    if (room.rowLayout && room.rowLayout.length) return room.rowLayout.reduce((a, b) => a + b, 0);
-    return room.rowsCount * room.benchesPerRow;
+  async addRoom(room: RoomDraft): Promise<void> {
+    await addDoc(this.roomsCol(), this.toDoc(room, { createdAt: serverTimestamp() }));
   }
 
-  async addRoom(room: Omit<Room, 'id' | 'totalCapacity'>): Promise<void> {
-    const benchCount = this.benchCountFor(room);
-    await addDoc(this.roomsCol(), {
+  /** Full-document write — the room form always submits a complete layout. */
+  async updateRoom(id: string, room: RoomDraft): Promise<void> {
+    const uid = this.auth.currentUid!;
+    await updateDoc(doc(this.firestore, `colleges/${uid}/rooms`, id), this.toDoc(room));
+  }
+
+  private toDoc(room: RoomDraft, extra: Record<string, unknown> = {}) {
+    const columnLayout = room.columnLayout.filter(n => n > 0);
+    const benchCount = benchCountOf(columnLayout);
+    return {
       name: room.name,
-      floor: room.floor,
-      rowsCount: room.rowsCount,
-      benchesPerRow: room.benchesPerRow,
-      rowLayout: room.rowLayout ?? null,
+      floor: room.floor ?? '',
+      columnLayout,
       benchCount,
       seatsPerBench: room.seatsPerBench,
       totalCapacity: benchCount * room.seatsPerBench,
-      isActive: room.isActive,
-      createdAt: serverTimestamp()
-    });
-  }
-
-  async updateRoom(id: string, room: Partial<Room>): Promise<void> {
-    const uid = this.auth.currentUid!;
-    const updates: any = { ...room };
-    if ('rowLayout' in room) updates['rowLayout'] = room.rowLayout ?? null;
-    if (room.rowsCount !== undefined || room.benchesPerRow !== undefined || 'rowLayout' in room) {
-      const benchCount = this.benchCountFor({
-        rowsCount: room.rowsCount ?? 1,
-        benchesPerRow: room.benchesPerRow ?? 1,
-        rowLayout: room.rowLayout ?? undefined
-      });
-      updates['benchCount'] = benchCount;
-      updates['totalCapacity'] = benchCount * (room.seatsPerBench ?? 2);
-    }
-    await updateDoc(doc(this.firestore, `colleges/${uid}/rooms`, id), updates);
+      isActive: room.isActive ?? true,
+      // Legacy fields are cleared so a migrated room never reads back row-shaped.
+      rowLayout: null,
+      rowsCount: null,
+      benchesPerRow: null,
+      ...extra
+    };
   }
 
   async deleteRoom(id: string): Promise<void> {

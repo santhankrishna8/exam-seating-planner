@@ -49,9 +49,15 @@ export class FileUploadService {
     });
   }
 
+  /**
+   * The first row is a header when its first cell carries no digit. Every hall
+   * ticket contains digits; every column label ("Hall Ticket No", "HTNO",
+   * "Roll Number") does not. Matching on substrings instead would drop the
+   * first candidate whenever a ticket happened to read "21NO1A0501".
+   */
   private hasHeader(row: any[]): boolean {
-    if (!row || !row[0]) return false;
-    const first = String(row[0]).toLowerCase();
-    return first.includes('hall') || first.includes('ticket') || first.includes('no') || first.includes('id');
+    if (!row || row[0] === undefined || row[0] === null) return false;
+    const cell = String(row[0]).trim();
+    return cell.length > 0 && !/\d/.test(cell);
   }
 }

@@ -13,6 +13,8 @@ export interface Student {
 export interface PublicSeat {
   hallTicketNo: string;
   name: string;
+  /** Hall document id — matched exactly, so two halls may share a name. */
+  roomId: string;
   roomName: string;
   benchNumber: number;
   seatNumber: number;

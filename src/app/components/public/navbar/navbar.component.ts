@@ -1,61 +1,85 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../services/theme.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { BrandMarkComponent } from '../../../shared/brand-mark/brand-mark.component';
+import { BRAND } from '../../../brand';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, IconComponent, BrandMarkComponent],
+  imports: [CommonModule, RouterLink, IconComponent, BrandMarkComponent],
   template: `
-    <nav class="navbar">
+    <header class="topbar">
       <div class="nav-inner">
-        <a class="nav-brand" routerLink="/">
-          <app-brand-mark [size]="34" />
-          <span class="brand-text">Seatly</span>
+        <a class="brand" routerLink="/">
+          <app-brand-mark [size]="30" />
+          <span class="brand-words">
+            <span class="brand-name">{{ brand.name }}</span>
+            <span class="brand-desc">{{ brand.descriptor }}</span>
+          </span>
         </a>
-        <div class="nav-links">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">Home</a>
-          <button class="theme-toggle btn btn-ghost btn-icon" (click)="theme.toggle()"
+
+        <nav class="nav-links" aria-label="Primary">
+          <button class="icon-btn" (click)="theme.toggle()"
             [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-            [title]="theme.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-            <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="18" />
+            [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
+            <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="17" />
           </button>
-          <a routerLink="/teacher/login" class="nav-link">Invigilator</a>
-          <a routerLink="/admin/login" class="btn btn-outline btn-sm">Admin Login</a>
-        </div>
+          <a routerLink="/teacher/login" class="nav-link">Invigilators</a>
+          <a routerLink="/admin/login" class="btn btn-outline btn-sm">Examination office</a>
+        </nav>
       </div>
-    </nav>
+    </header>
   `,
   styles: [`
-    .navbar {
+    .topbar {
       position: sticky; top: 0; z-index: 100;
-      background: var(--glass-bg-strong);
-      -webkit-backdrop-filter: saturate(1.4) blur(18px);
-      backdrop-filter: saturate(1.4) blur(18px);
-      border-bottom: 1px solid var(--glass-border);
-      box-shadow: var(--glass-sheen);
-      transition: background 0.3s;
+      background: color-mix(in oklch, var(--bg-primary) 88%, transparent);
+      -webkit-backdrop-filter: saturate(1.2) blur(10px);
+      backdrop-filter: saturate(1.2) blur(10px);
+      border-bottom: 1px solid var(--border-color);
     }
     .nav-inner {
-      max-width: 1240px; margin: 0 auto; padding: 0 24px;
-      height: 68px; display: flex; align-items: center; justify-content: space-between;
+      max-width: 1220px; margin: 0 auto; padding: 0 24px;
+      height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
     }
-    .nav-brand { display: flex; align-items: center; gap: 11px; text-decoration: none; color: var(--text-primary); }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--text-primary); min-width: 0; }
     app-brand-mark {
-      --mark-bg: var(--accent-blue); --mark-seat: oklch(1 0 0 / 0.62);
-      --mark-ring: oklch(1 0 0 / 0.28); --mark-you: var(--accent-red);
-      filter: drop-shadow(var(--shadow-sm));
+      --mark-bg: var(--ink-face);
+      --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
+      --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
+      --mark-you: var(--accent-red);
+      flex-shrink: 0;
     }
-    .brand-text { font-family: var(--font-head); font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; }
+    .brand-words { display: flex; flex-direction: column; min-width: 0; }
+    .brand-name { font-family: var(--font-head); font-weight: 600; font-size: 1.22rem; line-height: 1.05; letter-spacing: -0.01em; }
+    .brand-desc {
+      font-family: var(--font-mono); font-size: 0.53rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-muted); white-space: nowrap;
+    }
+
     .nav-links { display: flex; align-items: center; gap: 14px; }
-    .nav-link { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; transition: color var(--transition); text-decoration: none; }
-    .nav-link:hover, .nav-link.active { color: var(--text-primary); }
-    .theme-toggle { padding: 9px; border-radius: var(--radius-sm); }
+    .nav-link { color: var(--text-secondary); font-size: 0.87rem; }
+    .nav-link:hover { color: var(--text-primary); }
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border: 1px solid transparent; border-radius: var(--radius-sm);
+      background: none; color: var(--text-secondary);
+      transition: color var(--transition), background var(--transition), border-color var(--transition);
+    }
+    .icon-btn:hover { color: var(--text-primary); background: var(--bg-secondary); border-color: var(--border-color); }
+
+    @media (max-width: 560px) {
+      .nav-inner { padding: 0 16px; }
+      .brand-desc { display: none; }
+      .nav-links { gap: 8px; }
+      .nav-link { display: none; }
+    }
   `]
 })
 export class NavbarComponent {
   theme = inject(ThemeService);
+  brand = BRAND;
 }

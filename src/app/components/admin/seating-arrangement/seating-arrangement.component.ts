@@ -10,24 +10,16 @@ import { RoomService } from '../../../services/room.service';
 import { TeacherService } from '../../../services/teacher.service';
 import { ToastService } from '../../../services/toast.service';
 import { Student } from '../../../models/student.model';
-import { Room, roomRowLayout } from '../../../models/room.model';
+import { Room, roomColumns, benchGrid, formatFloor } from '../../../models/room.model';
 import { Exam } from '../../../models/exam.model';
 import { Teacher } from '../../../models/teacher.model';
+import { BRAND } from '../../../brand';
 import { firstValueFrom } from 'rxjs';
 
-interface SeatCell { students: Student[]; bench: number; }
-interface BenchRow { rowIndex: number; cells: SeatCell[]; }
-interface RoomData { room: Room; benchRows: BenchRow[]; seated: number; }
-
-function formatFloor(floor: string): string {
-  if (!floor) return '—';
-  if (floor.toLowerCase().includes('floor') || floor.toLowerCase().includes('ground')) return floor;
-  const n = parseInt(floor);
-  if (isNaN(n)) return floor;
-  if (n === 0) return 'Ground Floor';
-  const s = n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th';
-  return `${n}${s} Floor`;
-}
+interface SeatSlot { seatNo: number; student: Student | null; }
+interface BenchCell { bench: number; seats: SeatSlot[]; }
+interface HallColumn { index: number; benches: BenchCell[]; }
+interface RoomPlan { room: Room; columns: HallColumn[]; seated: number; benches: number; }
 
 @Component({
   selector: 'app-seating-arrangement',
@@ -39,47 +31,61 @@ function formatFloor(floor: string): string {
       <app-admin-sidebar />
       <main class="admin-main">
         @if (loading()) {
-          <app-loader message="Loading seating map..." />
+          <app-loader message="Drawing hall plans…" />
         } @else {
           <div class="page-content fade-in" [class.show-attendance]="printMode() === 'attendance'">
-            <div class="section-header no-print">
-              <div>
-                <a [routerLink]="['/admin/exams', examId]" class="back-link">← Back to Exam</a>
-                <h1>Seating Map</h1>
+
+            <header class="map-head no-print">
+              <div class="map-id">
+                <a [routerLink]="['/admin/exams', examId]" class="back-link">
+                  <app-icon name="arrow-left" [size]="14" /> Back to exam
+                </a>
+                <span class="eyebrow">Hall plan</span>
+                <h1 class="page-title">{{ exam()?.name || 'Seating' }}</h1>
                 @if (exam(); as ex) {
                   <div class="map-meta">
-                    <span class="map-exam">{{ ex.name }}</span>
-                    @if (ex.date) { <span><app-icon name="calendar" [size]="14" /> {{ ex.date | date:'dd MMM yyyy' }}</span> }
-                    @if (ex.startTime) { <span><app-icon name="clock" [size]="14" /> {{ ex.startTime }} – {{ ex.endTime }}</span> }
+                    @if (ex.subjectCode) { <span class="badge badge-gray">{{ ex.subjectCode }}</span> }
+                    @if (ex.date) { <span><app-icon name="calendar" [size]="13" /> {{ ex.date | date:'EEE, dd MMM yyyy' }}</span> }
+                    @if (ex.startTime) { <span><app-icon name="clock" [size]="13" /> {{ ex.startTime }} – {{ ex.endTime }}</span> }
+                    <span><app-icon name="users" [size]="13" /> {{ allSeated().length }} seated</span>
                   </div>
                 }
               </div>
+
               <div class="map-actions">
                 @if (attendanceMode()) {
-                  <span class="att-summary">
-                    <span class="text-success">{{ presentCount() }} present</span> ·
-                    <span class="text-danger">{{ absentCount() }} absent</span>
+                  <span class="att-tally mono">
+                    <b class="text-success">{{ presentCount() }}</b> present ·
+                    <b class="text-danger">{{ absentCount() }}</b> absent
                   </span>
                   <button class="btn btn-ghost" (click)="cancelAttendance()" [disabled]="savingAttendance()">Cancel</button>
                   <button class="btn btn-success" (click)="saveAttendance()" [disabled]="savingAttendance()">
-                    {{ savingAttendance() ? 'Saving…' : 'Save Attendance' }}
+                    {{ savingAttendance() ? 'Saving…' : 'Save attendance' }}
                   </button>
                 } @else {
-                  <button class="btn btn-outline" (click)="attendanceMode.set(true)"><app-icon name="check-circle" [size]="17" /> Mark Attendance</button>
-                  <button class="btn btn-outline" (click)="printMap()"><app-icon name="printer" [size]="17" /> Seating Map</button>
-                  <button class="btn btn-outline" (click)="printAttendanceSheet()"><app-icon name="clipboard" [size]="17" /> Attendance Sheet</button>
-                  <button class="btn btn-ghost" (click)="exportCsv()"><app-icon name="upload" [size]="17" /> CSV</button>
+                  <button class="btn btn-outline" (click)="attendanceMode.set(true)" [disabled]="allSeated().length === 0">
+                    <app-icon name="check-circle" [size]="15" /> Mark attendance
+                  </button>
+                  <button class="btn btn-outline" (click)="printMap()"><app-icon name="printer" [size]="15" /> Print plan</button>
+                  <button class="btn btn-outline" (click)="printAttendanceSheet()"><app-icon name="clipboard" [size]="15" /> Attendance sheet</button>
+                  <button class="btn btn-ghost" (click)="exportCsv()"><app-icon name="upload" [size]="15" /> CSV</button>
                 }
               </div>
-            </div>
+            </header>
+
             @if (attendanceMode()) {
-              <div class="att-hint no-print"><app-icon name="info" [size]="16" /> Tap a student's seat to toggle present / absent, then Save.</div>
+              <div class="notice no-print">
+                <app-icon name="info" [size]="15" />
+                Tap any occupied seat to mark that student absent, then save. Absentees are struck through.
+              </div>
             }
 
+            <!-- Print letterhead -->
             @if (exam(); as ex) {
-              <div class="print-head print-only">
-                <h1 class="print-title">{{ ex.name }}</h1>
-                <div class="print-meta">
+              <div class="sheet-head print-only">
+                <div class="sheet-org">{{ stamp }}</div>
+                <h1 class="sheet-title">{{ ex.name }}</h1>
+                <div class="sheet-meta">
                   <span>{{ ex.subjectCode }}</span>
                   <span>{{ ex.date | date:'dd MMM yyyy' }}</span>
                   <span>{{ ex.startTime }} – {{ ex.endTime }}</span>
@@ -87,97 +93,116 @@ function formatFloor(floor: string): string {
               </div>
             }
 
-            @if (roomData().length === 0) {
-              <div class="glass-card empty-state">
-                <div class="empty-state-icon"><app-icon name="seat" [size]="30" /></div>
-                <h3>No seating generated yet</h3>
-                <p>Go back and generate seating first.</p>
+            @if (roomPlans().length === 0) {
+              <div class="card empty-state">
+                <div class="empty-state-icon"><app-icon name="seat" [size]="26" /></div>
+                <h3>No seating allotted yet</h3>
+                <p>Go back to the exam and run the allotment — the hall plans appear here once seats are assigned.</p>
+                <a [routerLink]="['/admin/exams', examId]" class="btn btn-primary mt-16">Back to exam</a>
               </div>
             } @else {
-              @for (rd of roomData(); track rd.room.id) {
-                <div class="room-block glass-card">
-                  <div class="room-block-header">
-                    <div class="room-header-info">
-                      <h2 class="room-block-title">{{ rd.room.name }}</h2>
-                      <div class="room-header-meta">
-                        @if (rd.room.floor) {
-                          <span class="badge badge-gray"><app-icon name="pin" [size]="13" /> {{ formatFloor(rd.room.floor) }}</span>
-                        }
-                        <span class="badge badge-blue">{{ rd.seated }}/{{ rd.room.totalCapacity }} seated</span>
-                        @if (roomAbsentCount(rd.room.id) > 0) {
-                          <span class="badge badge-red">{{ roomAbsentCount(rd.room.id) }} absent</span>
-                        }
-                        <span class="text-muted" style="font-size:0.8rem">{{ rd.room.rowsCount }} rows × {{ rd.room.benchesPerRow }} benches × {{ rd.room.seatsPerBench }} seats</span>
-                      </div>
-                      @if (invigilatorsFor(rd.room.id).length) {
-                        <div class="room-invig"><app-icon name="badge" [size]="14" /> Invigilator: {{ invigilatorsFor(rd.room.id).join(', ') }}</div>
-                      }
-                    </div>
-                  </div>
+              <div class="legend no-print">
+                <span><i class="key key-free"></i> Empty</span>
+                <span><i class="key key-taken"></i> Allotted</span>
+                <span><i class="key key-absent"></i> Absent</span>
+                <span class="legend-note">Benches are numbered down each column, front to back.</span>
+              </div>
 
-                  <!-- Vertical room layout: each row of benches is a horizontal strip -->
-                  <div class="room-layout">
-                    <div class="room-direction-label">↑ Front of room</div>
-                    @for (brow of rd.benchRows; track brow.rowIndex) {
-                      <div class="bench-row-strip">
-                        <div class="row-label">Row {{ brow.rowIndex }}</div>
-                        <div class="bench-row-cells">
-                          @for (cell of brow.cells; track cell.bench) {
-                            <div class="bench-unit">
-                              <div class="bench-num-label">B{{ cell.bench }}</div>
-                              <div class="bench-seats-v">
-                                @for (s of getSeatSlots(cell, rd.room.seatsPerBench); track s.seatNo) {
-                                  <div class="seat-v"
-                                    [class.occupied]="s.student !== null"
-                                    [class.absent]="s.student && isAbsent(s.student.hallTicketNo)"
-                                    [class.clickable]="attendanceMode() && s.student"
-                                    (click)="s.student && attendanceMode() ? toggleAbsent(s.student.hallTicketNo) : null">
-                                    @if (s.student) {
-                                      <div class="sv-ticket">{{ s.student.hallTicketNo }}</div>
-                                      <div class="sv-name">{{ s.student.name | slice:0:10 }}</div>
-                                      @if (s.student.department) {
-                                        <div class="sv-dept">{{ s.student.department | slice:0:6 }}</div>
-                                      }
-                                    } @else {
-                                      <div class="sv-empty">S{{ s.seatNo }}</div>
-                                    }
-                                  </div>
-                                }
-                              </div>
-                            </div>
-                          }
-                        </div>
+              @for (plan of roomPlans(); track plan.room.id) {
+                <section class="card hall">
+                  <header class="hall-head">
+                    <div class="hall-id">
+                      <h2 class="hall-name">{{ plan.room.name }}</h2>
+                      <div class="hall-meta">
+                        <span class="badge badge-gray">{{ formatFloor(plan.room.floor) }}</span>
+                        <span class="badge badge-blue">{{ plan.seated }} / {{ plan.room.totalCapacity }} seated</span>
+                        @if (roomAbsentCount(plan.room.id) > 0) {
+                          <span class="badge badge-red">{{ roomAbsentCount(plan.room.id) }} absent</span>
+                        }
+                        <span class="hall-shape mono">{{ plan.columns.length }} col · {{ plan.benches }} benches · {{ plan.room.seatsPerBench }}/bench</span>
                       </div>
-                    }
-                    <div class="room-direction-label">↓ Back of room</div>
+                    </div>
+                    <div class="hall-invig">
+                      <span class="eyebrow">Invigilator</span>
+                      <span class="invig-names">
+                        {{ invigilatorsFor(plan.room.id).length ? invigilatorsFor(plan.room.id).join(' · ') : '—' }}
+                      </span>
+                    </div>
+                  </header>
+
+                  <div class="hall-plan">
+                    <div class="board"><span>Board · front of hall</span></div>
+
+                    <div class="plan-scroll">
+                      <div class="plan-columns">
+                        @for (col of plan.columns; track col.index) {
+                          <div class="hall-col">
+                            <div class="hall-col-label">Column {{ col.index }}</div>
+                            @for (cell of col.benches; track cell.bench) {
+                              <div class="bench">
+                                <span class="bench-no mono">{{ cell.bench }}</span>
+                                <div class="bench-seats">
+                                  @for (slot of cell.seats; track slot.seatNo) {
+                                    <div class="seat"
+                                      [class.taken]="slot.student !== null"
+                                      [class.absent]="slot.student && isAbsent(slot.student.hallTicketNo)"
+                                      [class.actionable]="attendanceMode() && slot.student"
+                                      [attr.role]="attendanceMode() && slot.student ? 'button' : null"
+                                      [attr.tabindex]="attendanceMode() && slot.student ? 0 : null"
+                                      (click)="onSeatActivate(slot)"
+                                      (keydown.enter)="onSeatActivate(slot)"
+                                      (keydown.space)="onSeatActivate(slot)">
+                                      @if (slot.student) {
+                                        <span class="s-ticket mono">{{ slot.student.hallTicketNo }}</span>
+                                        <span class="s-name">{{ slot.student.name }}</span>
+                                        <span class="s-foot">
+                                          <span class="s-dept">{{ slot.student.department || '—' }}</span>
+                                          <span class="s-pos mono">S{{ slot.seatNo }}</span>
+                                        </span>
+                                      } @else {
+                                        <span class="s-empty mono">S{{ slot.seatNo }}</span>
+                                      }
+                                    </div>
+                                  }
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="rear"><span>Back of hall</span></div>
                   </div>
-                </div>
+                </section>
               }
             }
 
-            <!-- Printable attendance sheet (print-only; shown when printing attendance) -->
+            <!-- Printable attendance register (print-only) -->
             <div class="attendance-sheet">
-              @for (rd of roomData(); track rd.room.id) {
+              @for (plan of roomPlans(); track plan.room.id) {
                 <section class="att-room">
                   <div class="att-room-head">
-                    <h2>{{ exam()?.name }} — {{ rd.room.name }}</h2>
+                    <div class="sheet-org">{{ stamp }}</div>
+                    <h2>{{ exam()?.name }} — {{ plan.room.name }}</h2>
                     <div class="att-room-meta">
                       @if (exam()?.date) { <span>{{ exam()!.date | date:'dd MMM yyyy' }}</span> }
                       @if (exam()?.startTime) { <span>{{ exam()!.startTime }} – {{ exam()!.endTime }}</span> }
-                      <span>Invigilator: {{ invigilatorsFor(rd.room.id).length ? invigilatorsFor(rd.room.id).join(', ') : '____________' }}</span>
+                      <span>{{ formatFloor(plan.room.floor) }}</span>
+                      <span>Invigilator: {{ invigilatorsFor(plan.room.id).length ? invigilatorsFor(plan.room.id).join(', ') : '____________' }}</span>
                     </div>
                   </div>
                   <table class="att-table">
                     <thead>
-                      <tr><th>#</th><th>Hall Ticket</th><th>Name</th><th>Bench/Seat</th><th>Present</th><th>Signature</th></tr>
+                      <tr><th>#</th><th>Hall ticket</th><th>Name</th><th>Bench / seat</th><th>Present</th><th>Signature</th></tr>
                     </thead>
                     <tbody>
-                      @for (s of attendanceRoom(rd); track s.hallTicketNo; let i = $index) {
+                      @for (s of attendanceRoom(plan); track s.hallTicketNo; let i = $index) {
                         <tr [class.att-absent]="isAbsent(s.hallTicketNo)">
                           <td>{{ i + 1 }}</td>
                           <td class="mono">{{ s.hallTicketNo }}</td>
                           <td>{{ s.name }}</td>
-                          <td class="mono">B{{ s.assignedBench }}·S{{ s.assignedSeat }}</td>
+                          <td class="mono">B{{ s.assignedBench }} · S{{ s.assignedSeat }}</td>
                           <td class="att-mark">{{ isAbsent(s.hallTicketNo) ? 'A' : '' }}</td>
                           <td></td>
                         </tr>
@@ -185,9 +210,9 @@ function formatFloor(floor: string): string {
                     </tbody>
                   </table>
                   <div class="att-foot">
-                    <span>Present: {{ attendanceRoom(rd).length - roomAbsentCount(rd.room.id) }}</span>
-                    <span>Absent: {{ roomAbsentCount(rd.room.id) }}</span>
-                    <span>Total: {{ attendanceRoom(rd).length }}</span>
+                    <span>Present: {{ attendanceRoom(plan).length - roomAbsentCount(plan.room.id) }}</span>
+                    <span>Absent: {{ roomAbsentCount(plan.room.id) }}</span>
+                    <span>Total: {{ attendanceRoom(plan).length }}</span>
                     <span class="att-sign">Invigilator signature: ____________________</span>
                   </div>
                 </section>
@@ -199,106 +224,127 @@ function formatFloor(floor: string): string {
     </div>
   `,
   styles: [`
-    .admin-layout { display: flex; min-height: 100vh; }
-    .admin-main { flex: 1; overflow-y: auto; }
-    .back-link { color: var(--text-muted); font-size: 0.8rem; text-decoration: none; display: block; margin-bottom: 6px; }
+
+    .map-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
+    .back-link { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: 0.79rem; margin-bottom: 10px; }
     .back-link:hover { color: var(--text-primary); }
-    h1 { font-size: 1.5rem; }
-    .map-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 6px; font-size: 0.85rem; color: var(--text-secondary); }
+    .map-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 8px; font-size: 0.82rem; color: var(--text-secondary); }
     .map-meta span { display: inline-flex; align-items: center; gap: 6px; }
-    .map-meta .map-exam { font-weight: 500; color: var(--text-primary); }
     .map-meta app-icon { color: var(--text-muted); }
-    .map-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .att-summary { font-size: 0.85rem; font-family: var(--font-mono); margin-right: 4px; }
-    .att-hint { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-secondary); background: oklch(0.42 0.13 274 / 0.08); border: 1px solid oklch(0.42 0.13 274 / 0.2); }
-    .seat-v.clickable { cursor: pointer; }
-    .seat-v.clickable:hover { border-color: var(--accent-blue); }
-    .seat-v.absent { background: oklch(0.50 0.19 25 / 0.12) !important; border-color: oklch(0.50 0.19 25 / 0.45) !important; }
-    .seat-v.absent .sv-ticket, .seat-v.absent .sv-name { text-decoration: line-through; opacity: 0.7; }
+    .map-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .att-tally { font-size: 0.8rem; margin-right: 4px; color: var(--text-secondary); }
 
-    .room-block { padding: 0; margin-bottom: 24px; overflow: hidden; }
-    .room-block-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); }
-    .room-header-info { display: flex; flex-direction: column; gap: 6px; }
-    .room-block-title { font-size: 1.1rem; font-weight: 600; }
-    .room-header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .room-invig { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 0.82rem; color: var(--text-secondary); }
-    .room-invig app-icon { color: var(--accent-blue); }
-
-    .room-layout { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; overflow-x: auto; }
-    .room-direction-label { font-size: 0.72rem; color: var(--text-muted); text-align: center; letter-spacing: 0.08em; padding: 4px; }
-
-    .bench-row-strip { display: flex; align-items: flex-start; gap: 8px; }
-    .row-label {
-      font-size: 0.7rem; color: var(--text-muted); width: 44px; flex-shrink: 0;
-      text-align: right; padding-top: 28px; font-weight: 600;
+    .notice {
+      display: flex; align-items: center; gap: 9px; margin-bottom: 16px;
+      padding: 10px 13px; border-radius: var(--radius-sm); font-size: 0.85rem;
+      color: var(--text-secondary); background: var(--bg-secondary); border: 1px solid var(--border-color);
     }
-    .bench-row-cells { display: flex; gap: 8px; flex-wrap: nowrap; }
+    .notice app-icon { color: var(--accent-blue); flex-shrink: 0; }
 
-    .bench-unit { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .bench-num-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; }
+    .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-size: 0.76rem; color: var(--text-muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-note { margin-left: auto; }
+    .key { width: 13px; height: 13px; border-radius: 2px; border: 1px solid var(--border-strong); display: inline-block; }
+    .key-free { background: var(--bg-secondary); }
+    .key-taken { background: color-mix(in oklch, var(--accent-blue) 14%, var(--bg-card)); border-color: color-mix(in oklch, var(--accent-blue) 40%, transparent); }
+    .key-absent { background: color-mix(in oklch, var(--accent-red) 14%, var(--bg-card)); border-color: color-mix(in oklch, var(--accent-red) 45%, transparent); }
 
-    .bench-seats-v { display: flex; flex-direction: column; gap: 3px; }
+    /* ── Hall ── */
+    .hall { margin-bottom: 20px; overflow: hidden; }
+    .hall-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 15px 18px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+    .hall-name { font-size: 1.28rem; letter-spacing: -0.012em; }
+    .hall-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 7px; }
+    .hall-shape { font-size: 0.71rem; color: var(--text-muted); letter-spacing: 0.03em; }
+    .hall-invig { text-align: right; display: flex; flex-direction: column; gap: 3px; }
+    .invig-names { font-size: 0.88rem; color: var(--text-primary); }
 
-    .seat-v {
-      width: 88px; min-height: 56px; border-radius: 6px; padding: 6px 7px;
+    .hall-plan { padding: 0; }
+    .board, .rear {
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .board { padding: 11px; background: var(--bg-sunken); border-bottom: 1px solid var(--border-color); }
+    .board span { position: relative; }
+    .board span::before, .board span::after { content: ''; position: absolute; top: 50%; width: 40px; height: 1px; background: var(--border-strong); }
+    .board span::before { right: calc(100% + 12px); }
+    .board span::after { left: calc(100% + 12px); }
+    .rear { padding: 10px; border-top: 1px solid var(--border-color); }
+
+    .plan-scroll { overflow-x: auto; padding: 18px; }
+    .plan-columns { display: flex; gap: 22px; align-items: flex-start; min-width: min-content; }
+    .hall-col { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+    .hall-col-label { font-family: var(--font-mono); font-size: 0.61rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; text-align: center; }
+
+    .bench { display: flex; align-items: stretch; gap: 5px; }
+    .bench-no {
+      flex: 0 0 auto; width: 22px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.64rem; color: var(--text-muted);
+      border-right: 1px dashed var(--border-color);
+    }
+    .bench-seats { display: flex; gap: 4px; }
+
+    .seat {
+      width: 104px; min-height: 50px;
+      display: flex; flex-direction: column; gap: 1px; justify-content: center;
+      padding: 5px 7px; border-radius: 3px;
       border: 1px solid var(--border-color); background: var(--bg-secondary);
-      display: flex; flex-direction: column; gap: 2px;
-      transition: border-color 0.2s;
+      transition: border-color var(--transition), background var(--transition);
     }
-    .seat-v.occupied {
-      background: oklch(0.42 0.13 274 / 0.07); border-color: oklch(0.42 0.13 274 / 0.28);
-    }
-    .sv-ticket { font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-blue); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sv-name { font-size: 0.72rem; color: var(--text-primary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sv-dept { font-size: 0.62rem; color: var(--text-muted); }
-    .sv-empty { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 36px; font-size: 0.7rem; color: var(--text-muted); opacity: 0.5; }
+    .seat.taken { background: color-mix(in oklch, var(--accent-blue) 7%, var(--bg-card)); border-color: color-mix(in oklch, var(--accent-blue) 30%, transparent); }
+    .seat.actionable { cursor: pointer; }
+    .seat.actionable:hover { border-color: var(--accent-blue); }
+    .seat.absent { background: color-mix(in oklch, var(--accent-red) 9%, var(--bg-card)) !important; border-color: color-mix(in oklch, var(--accent-red) 45%, transparent) !important; }
+    .seat.absent .s-ticket, .seat.absent .s-name { text-decoration: line-through; opacity: 0.65; }
 
-    /* Attendance sheet — hidden on screen, shown only when printing attendance */
+    .s-ticket { font-size: 0.67rem; font-weight: 500; color: var(--accent-blue); letter-spacing: 0.01em; }
+    .s-name { font-size: 0.72rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.6rem; color: var(--text-muted); }
+    .s-dept { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .s-empty { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 38px; font-size: 0.66rem; color: var(--text-muted); opacity: 0.5; }
+
+    /* ── Print ── */
+    .print-only { display: none; }
+    .sheet-org { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.2em; color: #555; margin-bottom: 6px; }
+    .sheet-title { font-size: 1.4rem; }
+    .sheet-meta { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.74rem; color: #444; margin-top: 4px; }
+
     .attendance-sheet { display: none; }
-    .att-room { margin-bottom: 22px; }
-    .att-room-head h2 { font-size: 1.2rem; margin-bottom: 4px; }
-    .att-room-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; color: #333; margin-bottom: 8px; }
-    .att-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-    .att-table th, .att-table td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
-    .att-table th { background: #f0f0f0; }
+    .att-room-head h2 { font-size: 1.15rem; margin-bottom: 4px; }
+    .att-room-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: #333; margin-bottom: 8px; }
+    .att-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .att-table th, .att-table td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
+    .att-table th { background: #efefef; }
     .att-table .att-mark { text-align: center; font-weight: 700; }
-    .att-absent td { background: #f3f3f3; }
-    .att-foot { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px; font-size: 0.82rem; }
+    .att-absent td { background: #f4f4f4; }
+    .att-foot { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px; font-size: 0.8rem; }
     .att-foot .att-sign { margin-left: auto; }
 
-    .print-only { display: none; }
-    .print-head { margin-bottom: 14px; }
-    .print-title { font-size: 1.5rem; margin-bottom: 4px; }
-    .print-meta { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
-
     @media print {
-      @page { margin: 12mm; }
+      @page { margin: 12mm; size: A4 landscape; }
       app-admin-sidebar, .no-print { display: none !important; }
       .print-only { display: block !important; }
-      .admin-layout { display: block; }
-      .admin-main { padding: 0; overflow: visible; }
       .page-content { padding: 0; max-width: 100%; }
       :host { color: #000; }
 
-      /* Attendance vs seating-map print switch */
+      .sheet-head { margin-bottom: 10px; border-bottom: 1.5px solid #000; padding-bottom: 8px; }
+
       .attendance-sheet { display: block; }
       .att-room { break-inside: avoid; page-break-inside: avoid; }
       .att-room + .att-room { page-break-before: always; }
       .page-content:not(.show-attendance) .attendance-sheet { display: none !important; }
-      .show-attendance .room-block,
-      .show-attendance .print-head { display: none !important; }
+      .show-attendance .hall,
+      .show-attendance .sheet-head { display: none !important; }
 
-      .room-block {
-        break-inside: avoid; page-break-inside: avoid; margin-bottom: 16px;
-        background: #fff !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-        border: 1.5px solid #000 !important; box-shadow: none !important; border-radius: 0;
-        print-color-adjust: exact; -webkit-print-color-adjust: exact;
-      }
-      .room-block + .room-block { page-break-before: always; }
-      .room-layout { overflow: visible !important; }
-      .seat-v { break-inside: avoid; }
-      .seat-v.occupied { border-color: #000 !important; }
-      .sv-ticket { color: #000 !important; }
+      .hall { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; border: 1.5px solid #000 !important; }
+      .hall + .hall { page-break-before: always; }
+      .hall-head { background: #f2f2f2 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .board, .rear { background: #f7f7f7 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .plan-scroll { overflow: visible !important; padding: 10px; }
+      .plan-columns { gap: 12px; }
+      .seat { width: 92px; min-height: 42px; break-inside: avoid; }
+      .seat.taken { border-color: #000 !important; background: #fff !important; }
+      .s-ticket { color: #000 !important; font-weight: 600; }
     }
   `]
 })
@@ -310,13 +356,13 @@ export class SeatingArrangementComponent implements OnInit {
   private toastService = inject(ToastService);
 
   examId = '';
+  stamp = BRAND.stamp;
   loading = signal(true);
   exam = signal<Exam | null>(null);
-  roomData = signal<RoomData[]>([]);
+  roomPlans = signal<RoomPlan[]>([]);
   teachers = signal<Teacher[]>([]);
   formatFloor = formatFloor;
 
-  // attendance
   attendanceMode = signal(false);
   savingAttendance = signal(false);
   allSeated = signal<Student[]>([]);
@@ -326,29 +372,29 @@ export class SeatingArrangementComponent implements OnInit {
 
   private printWith(mode: 'map' | 'attendance') {
     this.printMode.set(mode);
-    // let the bound class flush to the DOM before the print dialog opens
+    // Let the bound class flush to the DOM before the print dialog opens.
     setTimeout(() => window.print(), 60);
   }
   printMap() { this.printWith('map'); }
   printAttendanceSheet() { this.printWith('attendance'); }
 
-  /** Row list per room for the printable attendance sheet. */
-  attendanceRoom = (rd: RoomData) =>
+  attendanceRoom = (plan: RoomPlan) =>
     this.allSeated()
-      .filter(s => s.assignedRoom === rd.room.id)
+      .filter(s => s.assignedRoom === plan.room.id)
       .sort((a, b) => (a.assignedBench ?? 0) - (b.assignedBench ?? 0) || (a.assignedSeat ?? 0) - (b.assignedSeat ?? 0));
 
   exportCsv() {
-    const rows = [['Hall Ticket', 'Name', 'Department', 'Room', 'Bench', 'Seat', 'Status']];
-    for (const rd of this.roomData()) {
-      for (const s of this.attendanceRoom(rd)) {
+    const rows = [['Hall Ticket', 'Name', 'Department', 'Hall', 'Floor', 'Bench', 'Seat', 'Status']];
+    for (const plan of this.roomPlans()) {
+      for (const s of this.attendanceRoom(plan)) {
         rows.push([
-          s.hallTicketNo, s.name, s.department ?? '', rd.room.name,
+          s.hallTicketNo, s.name, s.department ?? '', plan.room.name, plan.room.floor,
           String(s.assignedBench ?? ''), String(s.assignedSeat ?? ''),
           this.isAbsent(s.hallTicketNo) ? 'Absent' : 'Present'
         ]);
       }
     }
+    if (rows.length === 1) { this.toastService.error('Nothing to export yet.'); return; }
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -357,7 +403,7 @@ export class SeatingArrangementComponent implements OnInit {
     a.download = `attendance-${(this.exam()?.name ?? 'exam').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    this.toastService.success('Attendance CSV exported.');
+    this.toastService.success(`Exported ${rows.length - 1} rows.`);
   }
 
   isAbsent = (ticket: string) => this.absentSet().has(ticket);
@@ -366,9 +412,14 @@ export class SeatingArrangementComponent implements OnInit {
   roomAbsentCount = (roomId: string) =>
     this.allSeated().filter(s => s.assignedRoom === roomId && this.absentSet().has(s.hallTicketNo)).length;
 
+  onSeatActivate(slot: SeatSlot) {
+    if (!this.attendanceMode() || !slot.student) return;
+    this.toggleAbsent(slot.student.hallTicketNo);
+  }
+
   toggleAbsent(ticket: string) {
     const next = new Set(this.absentSet());
-    next.has(ticket) ? next.delete(ticket) : next.add(ticket);
+    if (next.has(ticket)) next.delete(ticket); else next.add(ticket);
     this.absentSet.set(next);
   }
 
@@ -383,16 +434,15 @@ export class SeatingArrangementComponent implements OnInit {
     try {
       const updates = this.allSeated().map(s => ({ hallTicketNo: s.hallTicketNo, absent: this.absentSet().has(s.hallTicketNo) }));
       await this.examService.saveAttendance(this.examId, updates);
-      // reflect locally so a re-open shows the saved state
       this.allSeated.set(this.allSeated().map(s => ({ ...s, absent: this.absentSet().has(s.hallTicketNo) })));
       this.toastService.success(`Attendance saved · ${this.presentCount()} present, ${this.absentCount()} absent.`);
       this.attendanceMode.set(false);
     } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Failed to save attendance.');
+      this.toastService.error(e?.message ?? 'Could not save attendance.');
     } finally { this.savingAttendance.set(false); }
   }
 
-  /** Invigilator names assigned to a room, for the room header. */
+  /** Invigilator names assigned to a hall, for the hall header. */
   invigilatorsFor(roomId: string): string[] {
     const ids = this.exam()?.invigilators?.[roomId] ?? [];
     return ids.map(id => this.teachers().find(t => t.id === id)?.name).filter((n): n is string => !!n);
@@ -411,44 +461,49 @@ export class SeatingArrangementComponent implements OnInit {
       this.teachers.set(teachers ?? []);
       this.allSeated.set(students.filter(s => s.isSeated));
       this.seedAbsent();
-      this.roomData.set(this.buildRoomData(rooms ?? [], students));
+      this.roomPlans.set(this.buildPlans(rooms ?? []));
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Could not load the hall plans.');
     } finally { this.loading.set(false); }
   }
 
-  buildRoomData(rooms: Room[], students: Student[]): RoomData[] {
-    const seated = students.filter(s => s.isSeated);
-    const result: RoomData[] = [];
+  /** Lay each hall out as columns of benches, filled from the seated roster. */
+  private buildPlans(rooms: Room[]): RoomPlan[] {
+    const seated = this.allSeated();
+    const plans: RoomPlan[] = [];
 
     for (const room of rooms) {
-      const roomStudents = seated.filter(s => s.assignedRoom === room.id);
-      if (roomStudents.length === 0) continue;
+      const occupants = seated.filter(s => s.assignedRoom === room.id);
+      if (occupants.length === 0) continue;
 
-      const layout = roomRowLayout(room);   // benches per row (uneven-aware)
-      const benchRows: BenchRow[] = [];
-      let benchNum = 0;
-
-      for (let r = 0; r < layout.length; r++) {
-        const rowCells: SeatCell[] = [];
-        for (let c = 0; c < layout[r]; c++) {
-          benchNum++;
-          const students = roomStudents.filter(s => s.assignedBench === benchNum);
-          rowCells.push({ bench: benchNum, students });
-        }
-        if (rowCells.length > 0) {
-          benchRows.push({ rowIndex: r + 1, cells: rowCells });
-        }
+      // One lookup per bench beats a filter() inside the render loop.
+      const byBench = new Map<number, Student[]>();
+      for (const s of occupants) {
+        const b = s.assignedBench ?? 0;
+        if (!byBench.has(b)) byBench.set(b, []);
+        byBench.get(b)!.push(s);
       }
 
-      result.push({ room, benchRows, seated: roomStudents.length });
+      const grid = benchGrid(roomColumns(room));
+      const columns: HallColumn[] = grid.map((benchNumbers, ci) => ({
+        index: ci + 1,
+        benches: benchNumbers.map(bench => ({
+          bench,
+          seats: Array.from({ length: room.seatsPerBench }, (_, i) => ({
+            seatNo: i + 1,
+            student: byBench.get(bench)?.find(s => s.assignedSeat === i + 1) ?? null
+          }))
+        }))
+      }));
+
+      plans.push({
+        room,
+        columns,
+        seated: occupants.length,
+        benches: grid.reduce((n, c) => n + c.length, 0)
+      });
     }
 
-    return result;
-  }
-
-  getSeatSlots(cell: SeatCell, seatsPerBench: number): { seatNo: number; student: Student | null }[] {
-    return Array.from({ length: seatsPerBench }, (_, i) => ({
-      seatNo: i + 1,
-      student: cell.students.find(s => s.assignedSeat === i + 1) ?? null
-    }));
+    return plans;
   }
 }

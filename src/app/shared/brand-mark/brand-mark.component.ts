@@ -1,8 +1,9 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
-// Product logomark: an examination "seal" enclosing a 3×3 seat grid with one
-// seat stamped in seal-red — the "your seat" motif that runs through the app.
-// Deliberately bespoke so the brand never reads as a stock/AI emoji.
+// Invigil logomark: an examination seal. A squared stamp with a hairline
+// inner rule enclosing a hall plan — three columns of benches viewed from
+// above, with a single bench struck in seal red (the allotted seat).
+// Bespoke geometry on purpose: the mark must never read as stock artwork.
 @Component({
   selector: 'app-brand-mark',
   standalone: true,
@@ -10,21 +11,27 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   template: `
     <svg [attr.width]="size" [attr.height]="size" viewBox="0 0 40 40" fill="none"
          class="mark" aria-hidden="true" focusable="false">
-      <rect x="1.5" y="1.5" width="37" height="37" rx="9"
+      <rect x="0.5" y="0.5" width="39" height="39" rx="4.5"
             fill="var(--mark-bg, currentColor)" />
-      <rect x="4.5" y="4.5" width="31" height="31" rx="6.5"
-            fill="none" stroke="var(--mark-ring, rgba(255,255,255,0.28))" stroke-width="1" />
-      <g fill="var(--mark-seat, rgba(255,255,255,0.55))">
-        <rect x="11" y="11" width="5" height="5" rx="1.2"/>
-        <rect x="17.5" y="11" width="5" height="5" rx="1.2"/>
-        <rect x="24" y="11" width="5" height="5" rx="1.2"/>
-        <rect x="11" y="17.5" width="5" height="5" rx="1.2"/>
-        <rect x="24" y="17.5" width="5" height="5" rx="1.2"/>
-        <rect x="11" y="24" width="5" height="5" rx="1.2"/>
-        <rect x="17.5" y="24" width="5" height="5" rx="1.2"/>
-        <rect x="24" y="24" width="5" height="5" rx="1.2"/>
+      <rect x="4" y="4" width="32" height="32" rx="2"
+            fill="none" stroke="var(--mark-ring, rgba(255,255,255,0.26))" stroke-width="0.9" />
+
+      <!-- hall plan: three columns of benches, drawn as ruled bars -->
+      <g fill="var(--mark-seat, rgba(255,255,255,0.58))">
+        <rect x="8"    y="10.4" width="7" height="2.6" rx="0.6"/>
+        <rect x="16.5" y="10.4" width="7" height="2.6" rx="0.6"/>
+        <rect x="25"   y="10.4" width="7" height="2.6" rx="0.6"/>
+
+        <rect x="8"    y="18.7" width="7" height="2.6" rx="0.6"/>
+        <rect x="25"   y="18.7" width="7" height="2.6" rx="0.6"/>
+
+        <rect x="8"    y="27" width="7" height="2.6" rx="0.6"/>
+        <rect x="16.5" y="27" width="7" height="2.6" rx="0.6"/>
+        <rect x="25"   y="27" width="7" height="2.6" rx="0.6"/>
       </g>
-      <rect x="17.5" y="17.5" width="5" height="5" rx="1.2" fill="var(--mark-you, #e5484d)"/>
+
+      <!-- the allotted bench -->
+      <rect x="16.5" y="18.7" width="7" height="2.6" rx="0.6" fill="var(--mark-you, #b4381f)"/>
     </svg>
   `,
   styles: [`
@@ -33,5 +40,5 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   `]
 })
 export class BrandMarkComponent {
-  @Input() size = 38;
+  @Input() size = 36;
 }

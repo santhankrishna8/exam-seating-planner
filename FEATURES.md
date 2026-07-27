@@ -1,16 +1,16 @@
-# Seatly — Exam Hall Seating, Made Effortless
+# Invigil — Exam Hall Seating, Made Effortless
 
-**Seatly** is a web application that helps colleges plan exam-hall seating in minutes and lets students find their exact seat in seconds — no app install, no login.
+**Invigil** is a web application that helps colleges plan exam-hall seating in minutes and lets students find their exact seat in seconds — no app install, no login.
 
 > *Enter a hall ticket number → see the room, floor, bench and seat. Print it. Done.*
 
 ---
 
-## 1. The Problem Seatly Solves
+## 1. The Problem Invigil Solves
 
 Every exam season, colleges manually prepare seating charts in spreadsheets, tape printed lists on notice boards, and field a crowd of students hunting for their name. It is slow, error-prone, and stressful on exam morning.
 
-Seatly replaces all of that with:
+Invigil replaces all of that with:
 
 - A simple admin dashboard to set up rooms and exams.
 - An automatic, fair seating generator (with anti-malpractice options).
@@ -18,7 +18,7 @@ Seatly replaces all of that with:
 
 ---
 
-## 2. Who Uses Seatly
+## 2. Who Uses Invigil
 
 | Role | What they do | Login needed? |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ Each college's data is fully private and isolated — one college can never see 
 - Preview of loaded students before saving.
 
 ### 3.6 Automatic Seating Generation
-Seatly assigns every student a room, bench and seat with one click. Admins choose **how**:
+Invigil assigns every student a room, bench and seat with one click. Admins choose **how**:
 
 **Allotment modes**
 - **Sequential** — keep the uploaded order.
@@ -76,8 +76,8 @@ Seatly assigns every student a room, bench and seat with one click. Admins choos
 - Seats fill **column by column**: down the entire left column of benches (front row to back), then the next column — a natural, predictable flow for invigilators.
 
 **Built-in safeguards**
-- If the chosen rooms can't hold all students, Seatly stops and says exactly how many seats are short.
-- **Double-booking protection:** a room already used by another exam at an overlapping date and time **cannot be allotted again** — Seatly blocks it and names the clashing exam.
+- If the chosen rooms can't hold all students, Invigil stops and says exactly how many seats are short.
+- **Double-booking protection:** a room already used by another exam at an overlapping date and time **cannot be allotted again** — Invigil blocks it and names the clashing exam.
 
 ### 3.7 Publish & Lifecycle
 - **Publish** an exam to make its seating visible to students (with a confirmation step, and a re-check that no room is double-booked).
@@ -96,7 +96,7 @@ Seatly assigns every student a room, bench and seat with one click. Admins choos
 
 ### 4.1 Instant Seat Search
 - On the home page, a student enters their **hall ticket number** and hits **Find Seat**.
-- Seatly searches every published exam and shows their seat details.
+- Invigil searches every published exam and shows their seat details.
 - Hall tickets are **not case-sensitive** — "21wh1a0501" finds the same seat as "21WH1A0501".
 
 ### 4.2 Seat Result Card
@@ -141,7 +141,7 @@ For each exam found, the student sees:
 2. **Adds rooms** (halls) with their bench layout.
 3. **Creates an exam** — date, time, and the rooms to use.
 4. **Uploads the student list** (CSV/Excel).
-5. **Generates seating** — picks a mode (e.g. Department spread) and optional gap seats; Seatly checks capacity and room clashes.
+5. **Generates seating** — picks a mode (e.g. Department spread) and optional gap seats; Invigil checks capacity and room clashes.
 6. **Reviews the seating map**, prints it for the hall door.
 7. **Publishes** the exam.
 8. **Students search** their hall ticket number from any phone and find — or print — their seat.
@@ -159,4 +159,4 @@ For each exam found, the student sees:
 
 ---
 
-*Seatly — find your exam seat in one search.*
+*Invigil — find your exam seat in one search.*
