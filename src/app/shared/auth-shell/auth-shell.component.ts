@@ -68,8 +68,6 @@ import { BRAND } from '../../brand';
     .lh-brand { display: flex; align-items: center; gap: 11px; color: inherit; position: relative; z-index: 1; }
     .lh-brand app-brand-mark {
       --mark-bg: rgb(255 255 255 / 0.12);
-      --mark-seat: rgb(255 255 255 / 0.55);
-      --mark-ring: rgb(255 255 255 / 0.25);
       --mark-you: var(--brand-yellow);
     }
     .lh-words { display: flex; flex-direction: column; }

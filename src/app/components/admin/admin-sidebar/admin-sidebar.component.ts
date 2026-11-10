@@ -89,10 +89,6 @@ interface NavItem { route: string; icon: IconName; label: string; group: string;
 
     .brand { display: flex; align-items: center; gap: 9px; color: var(--text-primary); min-width: 0; }
     app-brand-mark {
-      --mark-bg: #0b1b4d;
-      --mark-seat: rgb(255 255 255 / 0.45);
-      --mark-ring: rgb(255 255 255 / 0.22);
-      --mark-you: var(--brand-yellow);
       flex-shrink: 0;
     }
     .brand-words { display: flex; flex-direction: column; min-width: 0; }

@@ -164,7 +164,7 @@ import { normalizeHallTicket } from '../../../utils/hall-ticket';
     .site-foot { padding: 28px 20px; border-top: 1px solid var(--border-color); }
     .foot-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .foot-brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .foot-brand app-brand-mark { --mark-bg: #0b1b4d; --mark-seat: rgb(255 255 255 / 0.7); --mark-you: var(--brand-yellow); }
+    .foot-brand app-brand-mark { }
     .foot-links { display: flex; gap: 20px; }
     .foot-links a { color: var(--text-secondary); font-weight: 500; }
   `]

@@ -14,8 +14,8 @@ import { BRAND } from '../../../brand';
     <header class="topbar">
       <div class="nav-inner">
         <a class="brand" routerLink="/" aria-label="Invigil home">
-          <app-brand-mark [size]="38" />
-          <span class="brand-name">{{ brand.name }}</span>
+          <app-brand-mark [size]="36" />
+          <app-brand-mark part="word" [size]="22" />
         </a>
 
         <nav class="nav-links" aria-label="Primary">
@@ -43,12 +43,6 @@ import { BRAND } from '../../../brand';
     }
     .brand { display: flex; align-items: center; gap: 10px; color: var(--text-primary); }
     .brand:hover { color: var(--text-primary); }
-    app-brand-mark {
-      --mark-bg: #0b1b4d;
-      --mark-seat: rgb(255 255 255 / 0.7);
-      --mark-ring: rgb(255 255 255 / 0.2);
-      --mark-you: var(--brand-yellow);
-    }
     .brand-name { font-family: var(--font-head); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.04em; }
     .nav-links { display: flex; align-items: center; gap: 6px; flex: 1; }
     .nav-link { padding: 8px 12px; border-radius: 99px; color: var(--text-primary); font-size: 0.95rem; font-weight: 500; }

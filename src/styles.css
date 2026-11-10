@@ -53,6 +53,8 @@
 
   --transition: 0.18s cubic-bezier(0.32, 0.72, 0, 1);
   --sidebar-width: 252px;
+  --mark-word: #f2f6ff;
+  --mark-word-dot: #6cb2ff;
   --seat-bar: rgb(255 255 255 / 0.06);
   --halo: rgb(255 255 255 / 0.06);
 }
@@ -83,6 +85,8 @@
   --accent-green: #0f8a5f;
   --accent-amber: #b86e00;
   --brand-yellow: #ffd633;
+  --mark-word: #111826;
+  --mark-word-dot: #0a4ac5;
   --seat-bar: rgb(255 255 255 / 0.55);
   --halo: rgb(255 255 255 / 0.4);
 
