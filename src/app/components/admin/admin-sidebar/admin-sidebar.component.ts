@@ -92,7 +92,7 @@ interface NavItem { route: string; icon: IconName; label: string; group: string;
       --mark-bg: var(--ink-face);
       --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
       --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
-      --mark-you: var(--accent-red);
+      --mark-you: var(--brand-yellow);
       flex-shrink: 0;
     }
     .brand-words { display: flex; flex-direction: column; min-width: 0; }

@@ -13,68 +13,58 @@ import { BRAND } from '../../../brand';
   template: `
     <header class="topbar">
       <div class="nav-inner">
-        <a class="brand" routerLink="/">
-          <app-brand-mark [size]="30" />
-          <span class="brand-words">
-            <span class="brand-name">{{ brand.name }}</span>
-            <span class="brand-desc">{{ brand.descriptor }}</span>
-          </span>
+        <a class="brand" routerLink="/" aria-label="Invigil home">
+          <app-brand-mark [size]="38" />
+          <span class="brand-name">{{ brand.name }}</span>
         </a>
 
         <nav class="nav-links" aria-label="Primary">
+          <a routerLink="/" fragment="find" class="nav-link">Find my seat</a>
+          <a routerLink="/" fragment="how" class="nav-link">How it works</a>
+          <a routerLink="/" fragment="office" class="nav-link">For colleges</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a routerLink="/admin/login" class="btn btn-primary btn-sm office">Office sign in</a>
           <button class="icon-btn" (click)="theme.toggle()"
             [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
             [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
-            <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="17" />
+            <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="18" />
           </button>
-          <a routerLink="/admin/login" class="btn btn-outline btn-sm">Examination office</a>
-        </nav>
+        </div>
       </div>
     </header>
   `,
   styles: [`
-    .topbar {
-      position: sticky; top: 0; z-index: 100;
-      background: color-mix(in oklch, var(--bg-primary) 88%, transparent);
-      -webkit-backdrop-filter: saturate(1.2) blur(10px);
-      backdrop-filter: saturate(1.2) blur(10px);
-      border-bottom: 1px solid var(--border-color);
-    }
+    .topbar { position: sticky; top: 0; z-index: 100; }
     .nav-inner {
-      max-width: 1220px; margin: 0 auto; padding: 0 24px;
-      height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      max-width: 1220px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; gap: 24px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; color: var(--text-primary); min-width: 0; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--text-primary); }
+    .brand:hover { color: var(--text-primary); }
     app-brand-mark {
-      --mark-bg: var(--ink-face);
-      --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
-      --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
-      --mark-you: var(--accent-red);
-      flex-shrink: 0;
+      --mark-bg: #0b1b4d;
+      --mark-seat: rgb(255 255 255 / 0.7);
+      --mark-ring: rgb(255 255 255 / 0.2);
+      --mark-you: var(--brand-yellow);
     }
-    .brand-words { display: flex; flex-direction: column; min-width: 0; }
-    .brand-name { font-family: var(--font-head); font-weight: 600; font-size: 1.22rem; line-height: 1.05; letter-spacing: -0.01em; }
-    .brand-desc {
-      font-family: var(--font-mono); font-size: 0.53rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--text-muted); white-space: nowrap;
-    }
-
-    .nav-links { display: flex; align-items: center; gap: 14px; }
-    .nav-link { color: var(--text-secondary); font-size: 0.87rem; }
-    .nav-link:hover { color: var(--text-primary); }
+    .brand-name { font-family: var(--font-head); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.04em; }
+    .nav-links { display: flex; align-items: center; gap: 6px; flex: 1; }
+    .nav-link { padding: 8px 12px; border-radius: 99px; color: var(--text-primary); font-size: 0.95rem; font-weight: 500; }
+    .nav-link:hover { background: color-mix(in srgb, var(--bg-card) 60%, transparent); color: var(--text-primary); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
     .icon-btn {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border: 1px solid transparent; border-radius: var(--radius-sm);
-      background: none; color: var(--text-secondary);
-      transition: color var(--transition), background var(--transition), border-color var(--transition);
+      width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 12px;
+      background: var(--bg-card); color: var(--text-primary); box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), box-shadow var(--transition);
     }
-    .icon-btn:hover { color: var(--text-primary); background: var(--bg-secondary); border-color: var(--border-color); }
-
-    @media (max-width: 560px) {
-      .nav-inner { padding: 0 16px; }
-      .brand-desc { display: none; }
-      .nav-links { gap: 8px; }
-      .nav-link { display: none; }
+    .icon-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    @media (max-width: 720px) {
+      .nav-inner { padding: 10px 16px; gap: 12px; }
+      .nav-links { display: none; }
+      .nav-actions { margin-left: auto; }
     }
   `]
 })

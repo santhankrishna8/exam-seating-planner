@@ -70,7 +70,7 @@ import { BRAND } from '../../brand';
       --mark-bg: color-mix(in oklch, var(--ink-text) 12%, transparent);
       --mark-seat: color-mix(in oklch, var(--ink-text) 55%, transparent);
       --mark-ring: color-mix(in oklch, var(--ink-text) 25%, transparent);
-      --mark-you: var(--accent-red);
+      --mark-you: var(--brand-yellow);
     }
     .lh-words { display: flex; flex-direction: column; }
     .lh-name { font-family: var(--font-head); font-weight: 600; letter-spacing: -0.025em; font-size: 1.35rem; line-height: 1.05; }

@@ -1,94 +1,99 @@
 /* ══════════════════════════════════════════════════════════════
-   INVIGIL — Examination Control System
-   Design language: institutional record office.
-   Engraved paper, hairline rules, ink buttons, tabular figures,
-   one oxide-red seal accent. No glass, no gradients on type.
+   INVIGIL — design system "Sky".
+   Friendly and clear: soft sky blue, white cards with generous
+   radius, navy primary actions, one yellow highlight for "your
+   seat". Sentence-case labels, big readable type, no jargon.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── DARK slot (:root, no class) — "Night Register": graphite, not black ── */
+/* ── DARK (:root, no class) — deep navy ── */
 :root {
   color-scheme: dark;
 
-  --bg-primary: oklch(0.157 0.008 258);
-  --bg-secondary: oklch(0.196 0.008 258);
-  --bg-elevated: oklch(0.222 0.009 258);
-  --bg-card: oklch(0.186 0.008 258);
-  --bg-sunken: oklch(0.135 0.008 258);
+  --bg-primary: #0a1428;
+  --bg-secondary: #101d38;
+  --bg-elevated: #15264a;
+  --bg-card: #0f1c36;
+  --bg-sunken: #081020;
+  --sky-top: #12306b;
+  --sky-bottom: #0a1428;
 
-  --border-color: oklch(1 0 0 / 0.10);
-  --border-strong: oklch(1 0 0 / 0.20);
-  --rule: oklch(1 0 0 / 0.055);
+  --border-color: rgb(255 255 255 / 0.11);
+  --border-strong: rgb(255 255 255 / 0.22);
+  --rule: rgb(255 255 255 / 0.05);
 
-  --text-primary: oklch(0.965 0.003 258);
-  --text-secondary: oklch(0.755 0.006 258);
-  --text-muted: oklch(0.585 0.008 258);
+  --text-primary: #f2f6ff;
+  --text-secondary: #b6c4e0;
+  --text-muted: #8294b8;
 
-  /* Accents — slate blue structure, oxide seal, forest, brass */
-  --accent-blue: oklch(0.72 0.095 248);
-  --accent-blue-hover: oklch(0.80 0.09 248);
-  --accent-red: oklch(0.665 0.165 27);
-  --accent-green: oklch(0.72 0.115 158);
-  --accent-amber: oklch(0.78 0.115 72);
+  --accent-blue: #6cb2ff;
+  --accent-blue-hover: #9ccbff;
+  --accent-red: #ff7a7a;
+  --accent-green: #4cd9a0;
+  --accent-amber: #ffc94d;
+  --brand-yellow: #ffd633;
 
-  /* Ink = the primary action surface. Dark slot inverts to paper-on-ink. */
-  --ink-face: oklch(0.955 0.003 258);
-  --ink-text: oklch(0.17 0.01 258);
-  --ink-face-hover: oklch(0.88 0.004 258);
+  /* Ink = primary action surface (white-on-navy flips in dark). */
+  --ink-face: #ffd633;
+  --ink-text: #0b1b4d;
+  --ink-face-hover: #ffe37a;
 
-  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.45);
-  --shadow-md: 0 8px 22px -12px oklch(0 0 0 / 0.7);
-  --shadow-lg: 0 24px 54px -26px oklch(0 0 0 / 0.85);
-  --ring-focus: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 34%, transparent);
-  --inner-highlight: inset 0 1px 0 oklch(1 0 0 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 10px 28px -14px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 28px 60px -28px rgb(0 0 0 / 0.85);
+  --ring-focus: 0 0 0 4px color-mix(in srgb, var(--accent-blue) 30%, transparent);
+  --inner-highlight: none;
 
-  --radius-sm: 5px;
-  --radius-md: 7px;
-  --radius-lg: 10px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 
-  /* Neo-grotesque throughout: formal, neutral, and already on every machine,
-     so the app ships with no webfont request at all. */
-  --font-head: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif;
+  --font-head: 'Inter', 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Segoe UI Mono', Consolas, 'Liberation Mono', monospace;
 
   --transition: 0.18s cubic-bezier(0.32, 0.72, 0, 1);
   --sidebar-width: 252px;
-  --grid-step: 26px;
+  --seat-bar: rgb(255 255 255 / 0.06);
+  --halo: rgb(255 255 255 / 0.06);
 }
 
-/* ── LIGHT slot (.light-theme) — "Day Register": warm engraved paper ── */
+/* ── LIGHT (.light-theme) — sky blue and white ── */
 .light-theme {
   color-scheme: light;
 
-  --bg-primary: oklch(0.972 0.0055 88);
-  --bg-secondary: oklch(0.955 0.006 88);
-  --bg-elevated: oklch(1 0 0);
-  --bg-card: oklch(0.998 0.002 88);
-  --bg-sunken: oklch(0.935 0.007 88);
+  --bg-primary: #f1f7ff;
+  --bg-secondary: #e8f1fd;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sunken: #dfeafa;
+  --sky-top: #8fc8fb;
+  --sky-bottom: #f1f7ff;
 
-  --border-color: oklch(0.30 0.018 258 / 0.145);
-  --border-strong: oklch(0.30 0.02 258 / 0.30);
-  --rule: oklch(0.30 0.02 258 / 0.055);
+  --border-color: rgb(16 42 99 / 0.12);
+  --border-strong: rgb(16 42 99 / 0.26);
+  --rule: rgb(16 42 99 / 0.05);
 
-  --text-primary: oklch(0.215 0.017 258);
-  --text-secondary: oklch(0.435 0.014 258);
-  --text-muted: oklch(0.575 0.012 258);
+  --text-primary: #0b1b4d;
+  --text-secondary: #3d4f7c;
+  --text-muted: #6a7aa2;
 
-  --accent-blue: oklch(0.435 0.098 250);
-  --accent-blue-hover: oklch(0.345 0.105 250);
-  --accent-red: oklch(0.475 0.168 28);
-  --accent-green: oklch(0.455 0.105 157);
-  --accent-amber: oklch(0.565 0.115 68);
+  --accent-blue: #1d5fd6;
+  --accent-blue-hover: #1248ad;
+  --accent-red: #d83a3a;
+  --accent-green: #0f8a5f;
+  --accent-amber: #b86e00;
+  --brand-yellow: #ffd633;
+  --seat-bar: rgb(255 255 255 / 0.55);
+  --halo: rgb(255 255 255 / 0.4);
 
-  --ink-face: oklch(0.205 0.018 258);
-  --ink-text: oklch(0.98 0.004 88);
-  --ink-face-hover: oklch(0.30 0.022 258);
+  --ink-face: #0b1b4d;
+  --ink-text: #ffffff;
+  --ink-face-hover: #1a2f72;
 
-  --shadow-sm: 0 1px 1.5px oklch(0.25 0.02 258 / 0.07);
-  --shadow-md: 0 8px 20px -14px oklch(0.25 0.02 258 / 0.30);
-  --shadow-lg: 0 22px 48px -26px oklch(0.25 0.02 258 / 0.34);
-  --ring-focus: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 22%, transparent);
-  --inner-highlight: inset 0 1px 0 oklch(1 0 0 / 0.8);
+  --shadow-sm: 0 1px 2px rgb(11 27 77 / 0.08);
+  --shadow-md: 0 12px 28px -16px rgb(11 27 77 / 0.35);
+  --shadow-lg: 0 30px 60px -30px rgb(11 27 77 / 0.4);
+  --ring-focus: 0 0 0 4px color-mix(in srgb, var(--accent-blue) 22%, transparent);
 }
 
 /* ── Reset ── */
@@ -97,46 +102,25 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-primary);
   line-height: 1.55;
   min-height: 100vh;
   background-color: var(--bg-primary);
-  /* Engraved plan grid — the surface of a drawing sheet, not an aurora blob. */
-  background-image:
-    linear-gradient(var(--rule) 1px, transparent 1px),
-    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
-  background-size: var(--grid-step) var(--grid-step), var(--grid-step) var(--grid-step);
-  background-position: center top;
-  background-attachment: fixed;
+  background-image: linear-gradient(180deg, var(--sky-top) 0, var(--bg-primary) 520px);
+  background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-/* A single soft light source at the top so pages have a horizon. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0 0 auto 0;
-  height: 420px;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(1100px 420px at 50% -140px,
-    color-mix(in oklch, var(--accent-blue) 9%, transparent), transparent 70%);
-}
-.light-theme body::before {
-  background: radial-gradient(1200px 440px at 50% -160px,
-    color-mix(in oklch, var(--accent-blue) 7%, transparent), transparent 72%);
 }
 
 /* Neo-grotesques need negative tracking and real weight at display sizes,
    or a large heading reads as body copy that happened to grow. */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-head);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.022em;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 h4, h5, h6 { letter-spacing: -0.012em; }
@@ -146,14 +130,14 @@ a:hover { color: var(--accent-blue-hover); }
 img, svg { display: block; max-width: 100%; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; font-size: inherit; }
-::selection { background: color-mix(in oklch, var(--accent-blue) 24%, transparent); color: var(--text-primary); }
+::selection { background: color-mix(in srgb, var(--accent-blue) 24%, transparent); color: var(--text-primary); }
 
 /* Figures line up in columns everywhere. */
 .mono, code, table td, .stat-value, input[type='number'] {
   font-variant-numeric: tabular-nums;
 }
 
-:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; border-radius: 3px; }
+:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 2px; border-radius: 6px; }
 :focus:not(:focus-visible) { outline: none; }
 .form-control:focus-visible { outline: none; }
 
@@ -181,18 +165,26 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .rule { height: 1px; background: var(--border-color); border: 0; }
 
 /* ── Eyebrow / label typography ── */
-.eyebrow,
-.form-label,
-.stat-label,
-.badge,
-thead th {
-  font-family: var(--font-mono);
-  font-size: 0.685rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.eyebrow, .form-label, .stat-label {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
-.eyebrow { color: var(--text-muted); display: inline-block; }
+.badge {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
+}
+thead th {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.eyebrow { color: var(--accent-blue); display: inline-block; }
 
 /* ── Buttons — ink face, hairline outline, crisp press ── */
 .btn {
@@ -201,12 +193,12 @@ thead th {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 9px 16px;
+  padding: 10px 18px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: 0.86rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--text-primary);
   transition: background var(--transition), color var(--transition),
@@ -216,16 +208,17 @@ thead th {
 .btn:active { transform: translateY(0.5px); }
 
 .btn-primary { background: var(--ink-face); color: var(--ink-text); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
 .btn-primary:hover { background: var(--ink-face-hover); }
 
 .btn-success { background: var(--accent-green); color: var(--ink-text); }
-.light-theme .btn-success { color: oklch(0.99 0.005 88); }
+.light-theme .btn-success { color: #fff; }
 .btn-success:hover { filter: brightness(1.06); }
 
-.btn-danger { background: var(--accent-red); color: oklch(0.99 0.005 88); }
+.btn-danger { background: var(--accent-red); color: #fff; }
 .btn-danger:hover { filter: brightness(1.06); }
 
-.btn-warning { background: var(--accent-amber); color: oklch(0.2 0.03 72); }
+.btn-warning { background: var(--brand-yellow); color: #0b1b4d; }
 .btn-warning:hover { filter: brightness(1.05); }
 
 .btn-outline { background: var(--bg-card); border-color: var(--border-strong); color: var(--text-primary); }
@@ -235,8 +228,8 @@ thead th {
 .btn-ghost:hover { color: var(--text-primary); background: var(--bg-secondary); }
 
 .btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none !important; filter: none !important; }
-.btn-sm { padding: 6px 11px; font-size: 0.79rem; gap: 6px; }
-.btn-lg { padding: 13px 24px; font-size: 0.95rem; }
+.btn-sm { padding: 7px 13px; font-size: 0.82rem; gap: 6px; }
+.btn-lg { padding: 14px 26px; font-size: 1rem; }
 .btn-icon { padding: 8px; }
 
 /* ── Form controls ── */
@@ -247,8 +240,8 @@ thead th {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  padding: 10px 12px;
-  font-size: 0.9rem;
+  padding: 12px 14px;
+  font-size: 0.95rem;
   transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
   width: 100%;
@@ -266,22 +259,20 @@ select.form-control option { background: var(--bg-elevated); color: var(--text-p
 
 input[type='checkbox'], input[type='radio'] { accent-color: var(--accent-blue); }
 
-/* ── Badges — stamped, not pill-shaped ── */
+/* ── Badges ── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2.5px 7px;
-  border-radius: 3px;
-  font-size: 0.655rem;
-  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: 99px;
   border: 1px solid transparent;
   line-height: 1.5;
 }
-.badge-blue  { background: color-mix(in oklch, var(--accent-blue) 11%, transparent);  color: var(--accent-blue);  border-color: color-mix(in oklch, var(--accent-blue) 26%, transparent); }
-.badge-green { background: color-mix(in oklch, var(--accent-green) 12%, transparent); color: var(--accent-green); border-color: color-mix(in oklch, var(--accent-green) 28%, transparent); }
-.badge-amber { background: color-mix(in oklch, var(--accent-amber) 14%, transparent); color: var(--accent-amber); border-color: color-mix(in oklch, var(--accent-amber) 30%, transparent); }
-.badge-red   { background: color-mix(in oklch, var(--accent-red) 11%, transparent);   color: var(--accent-red);   border-color: color-mix(in oklch, var(--accent-red) 28%, transparent); }
+.badge-blue  { background: color-mix(in srgb, var(--accent-blue) 11%, transparent);  color: var(--accent-blue);  border-color: color-mix(in srgb, var(--accent-blue) 26%, transparent); }
+.badge-green { background: color-mix(in srgb, var(--accent-green) 12%, transparent); color: var(--accent-green); border-color: color-mix(in srgb, var(--accent-green) 28%, transparent); }
+.badge-amber { background: color-mix(in srgb, var(--accent-amber) 14%, transparent); color: var(--accent-amber); border-color: color-mix(in srgb, var(--accent-amber) 30%, transparent); }
+.badge-red   { background: color-mix(in srgb, var(--accent-red) 11%, transparent);   color: var(--accent-red);   border-color: color-mix(in srgb, var(--accent-red) 28%, transparent); }
 .badge-gray  { background: var(--bg-secondary); color: var(--text-secondary); border-color: var(--border-color); }
 
 /* ── Tables — ruled register ── */
@@ -296,28 +287,31 @@ thead th {
   border-bottom: 1px solid var(--border-strong);
   white-space: nowrap;
 }
-tbody td { padding: 11px 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+tbody td { padding: 13px 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr { transition: background var(--transition); }
 tbody tr:hover td { background: var(--bg-secondary); }
 
 /* ── Stat tiles — ledger entries ── */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; margin-bottom: 26px; background: var(--border-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 26px; }
 .stat-card {
   position: relative;
-  padding: 17px 18px 18px;
+  padding: 18px 20px 20px;
   background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 5px;
   transition: background var(--transition);
 }
-.stat-card:hover { background: var(--bg-elevated); }
+.stat-card:hover { box-shadow: var(--shadow-md); }
 .stat-label { color: var(--text-muted); }
 .stat-value {
   font-family: var(--font-head);
-  font-size: 2.1rem;
-  font-weight: 600;
+  font-size: 2.2rem;
+  font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1;
   color: var(--text-primary);
@@ -361,8 +355,8 @@ tbody tr:hover td { background: var(--bg-secondary); }
 .divider { border: none; border-top: 1px solid var(--border-color); margin: 22px 0; }
 
 /* Page title block used across admin screens */
-.page-title { font-size: 1.8rem; letter-spacing: -0.03em; }
-.page-sub { color: var(--text-muted); font-size: 0.875rem; margin-top: 3px; }
+.page-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.035em; }
+.page-sub { color: var(--text-secondary); font-size: 0.95rem; margin-top: 3px; }
 
 /* ── Animation ── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

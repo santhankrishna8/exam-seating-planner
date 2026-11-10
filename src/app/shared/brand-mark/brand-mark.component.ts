@@ -11,9 +11,9 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   template: `
     <svg [attr.width]="size" [attr.height]="size" viewBox="0 0 40 40" fill="none"
          class="mark" aria-hidden="true" focusable="false">
-      <rect x="0.5" y="0.5" width="39" height="39" rx="4.5"
+      <rect x="0.5" y="0.5" width="39" height="39" rx="11"
             fill="var(--mark-bg, currentColor)" />
-      <rect x="4" y="4" width="32" height="32" rx="2"
+      <rect x="4" y="4" width="32" height="32" rx="7"
             fill="none" stroke="var(--mark-ring, rgba(255,255,255,0.26))" stroke-width="0.9" />
 
       <!-- hall plan: three columns of benches, drawn as ruled bars -->
@@ -31,7 +31,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
       </g>
 
       <!-- the allotted bench -->
-      <rect x="16.5" y="18.7" width="7" height="2.6" rx="0.6" fill="var(--mark-you, #b4381f)"/>
+      <rect x="16.5" y="18.7" width="7" height="2.6" rx="0.6" fill="var(--mark-you, #ffd633)"/>
     </svg>
   `,
   styles: [`
