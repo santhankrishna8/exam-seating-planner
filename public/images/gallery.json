@@ -1,0 +1,34 @@
+[
+  {
+    "src": "images/gfp-lecture-hall-1100.webp",
+    "alt": "Rows of wooden lecture seats, each with its number stamped on the back",
+    "pos": "62% 78%",
+    "credit": "Lecture hall, Yinan Chen, public domain",
+    "url": "https://commons.wikimedia.org/wiki/File:Gfp-lecture-hall.jpg",
+    "srcset": "images/gfp-lecture-hall-640.webp 640w, images/gfp-lecture-hall-1100.webp 1100w"
+  },
+  {
+    "src": "images/rows-of-desks-in-lecture-theatre-1100.webp",
+    "alt": "A hall with wooden benches in columns either side of a central aisle",
+    "pos": "50% 80%",
+    "credit": "Rows of desks, Paul The Writer, CC0",
+    "url": "https://commons.wikimedia.org/wiki/File:Rows_of_Desks_in_Lecture_Theatre.jpg",
+    "srcset": "images/rows-of-desks-in-lecture-theatre-640.webp 640w, images/rows-of-desks-in-lecture-theatre-1100.webp 1100w"
+  },
+  {
+    "src": "images/empty-lecture-theatre-1100.webp",
+    "alt": "An empty tiered lecture theatre with grey seats and fold-down desks",
+    "pos": "50% 62%",
+    "credit": "Lecture theatre, Panamitsu, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:VUW_lecture_theatre_HMLT001.jpg",
+    "srcset": "images/empty-lecture-theatre-640.webp 640w, images/empty-lecture-theatre-1100.webp 1100w"
+  },
+  {
+    "src": "images/empty-seats-1100.webp",
+    "alt": "Close rows of empty upholstered seats, each with a letter and number on the back",
+    "pos": "50% 60%",
+    "credit": "Empty seats, ProjectManhattan, CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Empty_seats.jpg",
+    "srcset": "images/empty-seats-640.webp 640w, images/empty-seats-1100.webp 1100w"
+  }
+]

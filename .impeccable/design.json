@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T00:00:00Z",
+  "title": "Design System: Invigil",
+  "extensions": {
+    "colorMeta": {
+      "sign-green": { "role": "primary", "displayName": "Signage Green", "canonical": "oklch(0.38 0.085 160)", "tonalRamp": ["oklch(0.15 0.05 160)", "oklch(0.22 0.065 160)", "oklch(0.31 0.08 160)", "oklch(0.38 0.085 160)", "oklch(0.50 0.10 160)", "oklch(0.64 0.10 160)", "oklch(0.80 0.07 160)", "oklch(0.95 0.025 160)"] },
+      "accent": { "role": "primary", "displayName": "Link Green", "canonical": "oklch(0.40 0.09 160)", "tonalRamp": ["oklch(0.15 0.05 160)", "oklch(0.24 0.07 160)", "oklch(0.32 0.085 160)", "oklch(0.40 0.09 160)", "oklch(0.52 0.10 160)", "oklch(0.66 0.10 155)", "oklch(0.80 0.12 155)", "oklch(0.95 0.03 155)"] },
+      "marker-yellow": { "role": "secondary", "displayName": "Signal Yellow", "canonical": "oklch(0.89 0.17 95)", "tonalRamp": ["oklch(0.22 0.04 95)", "oklch(0.40 0.08 95)", "oklch(0.55 0.12 95)", "oklch(0.70 0.15 95)", "oklch(0.82 0.17 95)", "oklch(0.89 0.17 95)", "oklch(0.93 0.12 95)", "oklch(0.97 0.05 95)"] },
+      "ground": { "role": "neutral", "displayName": "Green-Tinted White", "canonical": "oklch(0.982 0.004 130)", "tonalRamp": ["oklch(0.15 0.011 165)", "oklch(0.21 0.02 165)", "oklch(0.40 0.02 165)", "oklch(0.50 0.018 165)", "oklch(0.75 0.01 150)", "oklch(0.90 0.008 145)", "oklch(0.945 0.008 145)", "oklch(0.982 0.004 130)"] },
+      "ink": { "role": "neutral", "displayName": "Green-Black Ink", "canonical": "oklch(0.21 0.02 165)", "tonalRamp": ["oklch(0.15 0.015 165)", "oklch(0.21 0.02 165)", "oklch(0.30 0.02 165)", "oklch(0.40 0.02 165)", "oklch(0.50 0.018 165)", "oklch(0.66 0.012 155)", "oklch(0.79 0.01 150)", "oklch(0.96 0.006 130)"] },
+      "danger": { "role": "tertiary", "displayName": "Stop Red", "canonical": "oklch(0.52 0.20 27)", "tonalRamp": ["oklch(0.20 0.07 27)", "oklch(0.30 0.12 27)", "oklch(0.42 0.17 27)", "oklch(0.52 0.20 27)", "oklch(0.62 0.19 27)", "oklch(0.70 0.17 28)", "oklch(0.84 0.09 28)", "oklch(0.95 0.03 28)"] },
+      "hood-blue": { "role": "tertiary", "displayName": "Department Hood (hue 255, eight hues total)", "canonical": "oklch(0.52 0.125 255)", "tonalRamp": ["oklch(0.20 0.06 255)", "oklch(0.30 0.09 255)", "oklch(0.42 0.115 255)", "oklch(0.52 0.125 255)", "oklch(0.62 0.12 255)", "oklch(0.72 0.12 255)", "oklch(0.85 0.06 255)", "oklch(0.95 0.025 255)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Sign Display", "purpose": "Landing hero, search query and allotment numerals." },
+      "headline": { "displayName": "Door-Sign Title", "purpose": "Page-head titles on the green band." },
+      "title": { "displayName": "Section Title", "purpose": "Section and card headings." },
+      "body": { "displayName": "Body", "purpose": "All UI text; tabular lining figures." },
+      "label": { "displayName": "Ledger Label", "purpose": "Table heads, stat labels, definition terms; uppercase 0.75rem." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px oklch(0.25 0.04 165 / 0.07)", "purpose": "Cards, outline buttons, tables." },
+      { "name": "shadow-md", "value": "0 1px 2px oklch(0.25 0.04 165 / 0.06), 0 12px 26px -14px oklch(0.25 0.05 165 / 0.26)", "purpose": "Raised panels." },
+      { "name": "shadow-lg", "value": "0 2px 4px oklch(0.25 0.04 165 / 0.06), 0 30px 60px -28px oklch(0.25 0.06 165 / 0.38)", "purpose": "Dialogs and toasts." },
+      { "name": "ring-focus", "value": "0 0 0 3px color-mix(in oklch, var(--accent) 24%, transparent)", "purpose": "Form control focus." }
+    ],
+    "motion": [
+      { "name": "transition", "value": "0.18s cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "State changes: colour, border, shadow." },
+      { "name": "fade-in", "value": "0.4s cubic-bezier(0.22, 1, 0.36, 1) both", "purpose": "Entry rise of 8px with opacity." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "700px" },
+      { "name": "rail-to-topbar", "value": "860px" },
+      { "name": "tablet", "value": "1100px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Signage-green action button; becomes yellow inside a page-head band.",
+      "html": "<button class=\"ds-btn-primary\">Create examination</button>",
+      "css": ".ds-btn-primary { background: oklch(0.38 0.085 160); color: oklch(0.99 0.004 120); min-height: 40px; padding: 8px 18px; border: 1px solid transparent; border-radius: 5px; font-family: Barlow, system-ui, sans-serif; font-size: 0.95rem; font-weight: 600; box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14), 0 1px 2px oklch(0.2 0.05 160 / 0.3); transition: background 0.18s cubic-bezier(0.32,0.72,0,1); cursor: pointer; } .ds-btn-primary:hover { background: oklch(0.31 0.08 160); } .ds-btn-primary:focus-visible { outline: 3px solid oklch(0.40 0.09 160); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action on a white sheet.",
+      "html": "<button class=\"ds-btn-outline\">Export</button>",
+      "css": ".ds-btn-outline { background: #fff; color: oklch(0.21 0.02 165); min-height: 40px; padding: 8px 18px; border: 1px solid oklch(0.32 0.03 160 / 0.28); border-radius: 5px; font-family: Barlow, system-ui, sans-serif; font-size: 0.95rem; font-weight: 600; box-shadow: 0 1px 2px oklch(0.25 0.04 165 / 0.07); cursor: pointer; } .ds-btn-outline:hover { border-color: oklch(0.40 0.09 160); color: oklch(0.40 0.09 160); } .ds-btn-outline:focus-visible { outline: 3px solid oklch(0.40 0.09 160); outline-offset: 2px; }"
+    },
+    {
+      "name": "Page Head (door sign)",
+      "kind": "custom",
+      "refersTo": "page-head",
+      "description": "Full-bleed green band opening every admin page; primary action turns yellow.",
+      "html": "<div class=\"ds-head\"><div><h1>Examinations</h1><p>12 scheduled this term</p></div><button class=\"ds-head-btn\">New examination</button></div>",
+      "css": ".ds-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 34px 24px 30px; background: oklch(0.38 0.085 160); color: oklch(0.99 0.004 120); } .ds-head h1 { font-family: 'Barlow Semi Condensed', Barlow, sans-serif; font-weight: 700; font-size: 3rem; line-height: 1; letter-spacing: -0.01em; margin: 0; } .ds-head p { color: oklch(0.86 0.04 160); margin: 8px 0 0; } .ds-head-btn { background: oklch(0.89 0.17 95); color: oklch(0.22 0.04 95); min-height: 40px; padding: 8px 18px; border: 0; border-radius: 5px; font-weight: 600; font-family: Barlow, sans-serif; cursor: pointer; } .ds-head-btn:hover { background: oklch(0.93 0.15 95); } .ds-head-btn:focus-visible { outline: 3px solid oklch(0.89 0.17 95); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White field with strong hairline border and green focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Ticket number\" />",
+      "css": ".ds-input { width: 100%; min-height: 42px; padding: 9px 12px; background: #fff; color: oklch(0.21 0.02 165); border: 1px solid oklch(0.32 0.03 160 / 0.28); border-radius: 5px; font-family: Barlow, sans-serif; font-size: 1rem; box-shadow: inset 0 1px 1px oklch(0.25 0.04 165 / 0.05); outline: none; } .ds-input:hover { border-color: oklch(0.50 0.018 165); } .ds-input:focus { border-color: oklch(0.40 0.09 160); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(0.40 0.09 160) 24%, transparent); }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Rail item; active state is a full green fill with a yellow icon.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\">Dashboard</a><a class=\"ds-nav-item ds-active\" href=\"#\">Examinations</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 3px; width: 220px; padding: 12px; background: #fff; } .ds-nav-item { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 5px; color: oklch(0.40 0.02 165); font-family: Barlow, sans-serif; font-weight: 500; text-decoration: none; } .ds-nav-item:hover { background: oklch(0.962 0.006 140); color: oklch(0.21 0.02 165); } .ds-nav-item.ds-active { background: oklch(0.38 0.085 160); color: oklch(0.99 0.004 120); font-weight: 600; } .ds-nav-item:focus-visible { outline: 3px solid oklch(0.40 0.09 160); outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Pill with a dot and a word; never colour alone.",
+      "html": "<span class=\"ds-badge\">Published</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 8px; border-radius: 99px; font-family: Barlow, sans-serif; font-size: 0.78rem; font-weight: 600; line-height: 1.6; color: oklch(0.48 0.13 150); background: color-mix(in oklch, oklch(0.48 0.13 150) 11%, transparent); border: 1px solid color-mix(in oklch, oklch(0.48 0.13 150) 28%, transparent); } .ds-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }"
+    },
+    {
+      "name": "Hood Ribbon and Roundel",
+      "kind": "custom",
+      "refersTo": "roundel",
+      "description": "Department ribbon beside a name, and the yellow roundel mark.",
+      "html": "<span class=\"ds-dept\"><i class=\"ds-hood\"></i>Computer Science</span> <span class=\"ds-roundel\">A</span>",
+      "css": ".ds-dept { display: inline-flex; align-items: center; gap: 8px; font-family: Barlow, sans-serif; } .ds-hood { display: inline-block; width: 9px; height: 15px; background: oklch(0.52 0.125 255); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%); } .ds-roundel { display: inline-flex; align-items: center; justify-content: center; width: 2.1em; height: 2.1em; border-radius: 50%; background: oklch(0.89 0.17 95); color: oklch(0.22 0.04 95); font-family: 'Barlow Semi Condensed', Barlow, sans-serif; font-weight: 700; }"
+    },
+    {
+      "name": "Allotment Sign",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Hall, Bench, Seat as big numerals on green; the seat is yellow.",
+      "html": "<div class=\"ds-allot\"><div><small>Hall</small><b>12</b></div><div><small>Bench</small><b>4</b></div><div><small>Seat</small><b class=\"ds-seat\">2</b></div></div>",
+      "css": ".ds-allot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: oklch(1 0 0 / 0.2); } .ds-allot > div { background: oklch(0.38 0.085 160); color: oklch(0.99 0.004 120); padding: 22px 24px; display: flex; flex-direction: column; gap: 4px; } .ds-allot small { font-family: Barlow, sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.86 0.04 160); } .ds-allot b { font-family: 'Barlow Semi Condensed', Barlow, sans-serif; font-size: 3.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; } .ds-allot b.ds-seat { color: oklch(0.89 0.17 95); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus Wayfinding",
+    "overview": "The interface is signage. A deep signage-green band names where you are, big semi-condensed sans numerals say where to go, and a single signal-yellow marker says \"this one\". Everything else is a quiet, faintly green-tinted white ground with white sheets and near-black ink.\n\nThe system is sans only (Barlow and Barlow Semi Condensed, self-hosted). It is flat and ruled: hairline green-tinted borders and shallow shadows, no glass, no gradients on type, no icon-tile cards. Ornament is limited to roundels, arrows, and the department hood ribbon.",
+    "keyCharacteristics": [
+      "Green is the structure: page-head band, hero, footer, active nav item, primary action, allotment cells.",
+      "Yellow is the pointer: current thing, roundels, \"your seat\", primary action when sitting on green.",
+      "Numerals are the hero: big Barlow Semi Condensed figures, tabular and lining.",
+      "Two themes from one token set: a light default and a deep green-black dark slot."
+    ],
+    "rules": [
+      { "name": "The One Marker Rule", "body": "Yellow marks the current thing. It is never body text, link text or an icon on white; on light ground it appears only as a fill with marker-ink text. On green it may be text or stroke.", "section": "colors" },
+      { "name": "The Green Is Structure Rule", "body": "Green fills belong to bands, primary actions, hero, footer and the active nav item; it is not sprinkled as decoration.", "section": "colors" },
+      { "name": "The Word And A Dot Rule", "body": "Status badges carry a word and a dot, never colour alone.", "section": "colors" },
+      { "name": "The Tabular Figures Rule", "body": "Body sets tnum and lnum; all numerals (hall, bench, seat, tickets, dates) are tabular lining.", "section": "typography" },
+      { "name": "The Sans Only Rule", "body": "No serif, no monospace. --font-mono aliases the body face.", "section": "typography" },
+      { "name": "The Print Sheet Rule", "body": "In print, .page-head becomes black on white with a 2px black bottom rule and no clip; .card and the hall-ticket slip become white, 1px black border, square corners, no shadow. Green bands never print.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do open every admin page with .page-head and put the primary action inside it as the yellow button.",
+      "Do show hall, bench and seat as large tabular Barlow Semi Condensed numerals.",
+      "Do use yellow as a fill with marker-ink text, or on green.",
+      "Do tag every department with its hood ribbon and every status with a word and dot.",
+      "Do keep light and dark on the same tokens; add overrides only for lightness shifts.",
+      "Do print official documents black on white."
+    ],
+    "donts": [
+      "Don't use a serif, monospace costume, claret or grey paper ground (the rejected earlier world).",
+      "Don't put yellow text or icons on white or paper grounds.",
+      "Don't use glass, gradient text, icon-tile cards or a four-tile metric row; summary figures are a ruled strip.",
+      "Don't add a small kicker or eyebrow above a heading.",
+      "Don't introduce a second accent colour for decoration; extra hues belong to departments only."
+    ]
+  }
+}

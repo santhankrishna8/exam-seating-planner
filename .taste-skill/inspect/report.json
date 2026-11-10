@@ -1,0 +1,2051 @@
+{
+ "url": "http://127.0.0.1:4313/",
+ "at": "2026-10-29T14:11:54.858Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 7,
+   "filled": [
+    0.73,
+    0.36,
+    0.41,
+    0.87,
+    0.61,
+    0.5,
+    0.49
+   ],
+   "motion": {
+    "elements": 20,
+    "css": 1,
+    "transitions": 19,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 5530,
+     "screens": 6.1,
+     "words": 458,
+     "img": 2,
+     "video": 0,
+     "canvas": 0,
+     "svg": 27,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 2,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "empty-lecture-theatre-640.webp",
+      "empty-seats-640.webp"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "chars": 20,
+     "lines": 1,
+     "size": 76,
+     "vw": 5.3,
+     "font": "Cal Sans",
+     "weight": 400,
+     "tracking": -0.012,
+     "leading": 1.04,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.64,
+     "top": 148,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "lines": 1,
+     "size": 76,
+     "font": "Cal Sans"
+    },
+    "headings": [
+     {
+      "text": "Find your exam seat.",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 76,
+      "vw": 5.3,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.012,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.64,
+      "top": 148,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Your seat in four steps",
+      "words": 5,
+      "chars": 23,
+      "lines": 1,
+      "size": 46,
+      "vw": 3.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 1070,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Enter your number",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.28,
+      "top": 1343,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "We search every sitting",
+      "words": 4,
+      "chars": 23,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.28,
+      "top": 1735,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Read hall, bench and seat",
+      "words": 5,
+      "chars": 25,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.28,
+      "top": 2141,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.06,
+      "top": 2181,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.05,
+      "top": 2181,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.05,
+      "top": 2181,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "Carry the slip",
+      "words": 3,
+      "chars": 14,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.28,
+      "top": 2533,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 2588,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.05,
+      "top": 2588,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 52,
+      "vw": 3.6,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.05,
+      "top": 2588,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "What the office runs",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 46,
+      "vw": 3.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 2981,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Two ways in",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 46,
+      "vw": 3.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 3886,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Walk in knowing your seat.",
+      "words": 5,
+      "chars": 26,
+      "lines": 2,
+      "size": 60,
+      "vw": 4.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.36,
+      "top": 4752,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 15,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Barlow",
+       "share": 0.96,
+       "mono": false
+      },
+      {
+       "family": "Cal Sans",
+       "share": 0.04,
+       "mono": false
+      },
+      {
+       "family": "Barlow Semi Condensed",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      24,
+      30,
+      46,
+      60,
+      76
+     ],
+     "sizeCount": 14,
+     "notLoaded": [],
+     "body": {
+      "font": "Barlow",
+      "size": 16,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 9.2
+     },
+     "measureChars": 67,
+     "max": {
+      "size": 76,
+      "vw": 5.3,
+      "font": "Cal Sans",
+      "text": "Find your exam seat."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.15,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f9fc",
+     "bodyBgHsl": {
+      "h": 216,
+      "s": 0.45,
+      "l": 0.98
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f9fc",
+       "top": 0,
+       "hsl": {
+        "h": 216,
+        "s": 0.45,
+        "l": 0.98
+       }
+      },
+      {
+       "color": "#eff3f7",
+       "top": 2861,
+       "hsl": {
+        "h": 210,
+        "s": 0.33,
+        "l": 0.95
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#3f4858",
+       "share": 0.6
+      },
+      {
+       "color": "#111826",
+       "share": 0.3
+      },
+      {
+       "color": "#fafcfe",
+       "share": 0.03
+      },
+      {
+       "color": "#ddedff",
+       "share": 0.03
+      },
+      {
+       "color": "#201a03",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#071335",
+      "hsl": {
+       "h": 224,
+       "s": 0.77,
+       "l": 0.12
+      },
+      "fg": "#fafcfe"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 9,
+     "inHero": 4,
+     "radius": 10,
+     "height": 40,
+     "withShadow": 8,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Skip to content",
+      "Hall ticket number /",
+      "Office sign in",
+      "Find my seat"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 38,
+     "shadowOverlay": 7,
+     "shadowSamples": [
+      "i.mine → rgba(255, 255, 255, 0.7) 0px 0px 0px 4px, rgba(13, 39, 105, 0.5) 0px 6px 14px -4",
+      "div.tray.lookup-tray → oklab(1 0 0 / 0.6) 0px 0px 0px 1px",
+      "span.peek → oklch(0.2 0.05 90 / 0.25) 0px 0px 0px 1px, rgba(7, 28, 80, 0.45) 0px 8px 18px -8",
+      "form#lookup.tray-in.lookup → oklch(0.32 0.05 262 / 0.14) 0px 0px 0px 1px, oklch(0.25 0.06 264 / 0.05) 0px 1px"
+     ],
+     "gradients": 8,
+     "scrims": 0,
+     "gradientSamples": [
+      "div.sky → linear-gradient(oklch(0.74 0.12 245), oklch(0.93 0.04 240) 90%)",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "footer.foot 1440px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 4,
+     "roundedBoxes": 28,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 2,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 3136
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 6,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "barlow",
+     "cal sans",
+     "barlow semi condensed"
+    ]
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 7,
+   "filled": [
+    0.56,
+    0.63,
+    0.78,
+    0.93,
+    0.87,
+    0.74,
+    0.56
+   ],
+   "motion": {
+    "elements": 20,
+    "css": 1,
+    "transitions": 19,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 6523,
+     "screens": 6.4,
+     "words": 426,
+     "img": 2,
+     "video": 0,
+     "canvas": 0,
+     "svg": 27,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 2,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "empty-lecture-theatre-1100.webp",
+      "empty-seats-1100.webp"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "chars": 20,
+     "lines": 1,
+     "size": 49.2,
+     "vw": 6.4,
+     "font": "Cal Sans",
+     "weight": 400,
+     "tracking": -0.012,
+     "leading": 1.04,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 108,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "lines": 1,
+     "size": 49.2,
+     "font": "Cal Sans"
+    },
+    "headings": [
+     {
+      "text": "Find your exam seat.",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 49.2,
+      "vw": 6.4,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.012,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 108,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Your seat in four steps",
+      "words": 5,
+      "chars": 23,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.83,
+      "top": 848,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.12,
+      "top": 2280,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.1,
+      "top": 2280,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.1,
+      "top": 2280,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.11,
+      "top": 2776,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.09,
+      "top": 2776,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 2776,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "What the office runs",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.83,
+      "top": 3066,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Two ways in",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.83,
+      "top": 4117,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Walk in knowing your seat.",
+      "words": 5,
+      "chars": 26,
+      "lines": 2,
+      "size": 38.4,
+      "vw": 5,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 5751,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 11,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Barlow",
+       "share": 0.95,
+       "mono": false
+      },
+      {
+       "family": "Cal Sans",
+       "share": 0.04,
+       "mono": false
+      },
+      {
+       "family": "Barlow Semi Condensed",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      22,
+      24,
+      32,
+      38,
+      49
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Barlow",
+      "size": 18,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.8
+     },
+     "measureChars": 67,
+     "max": {
+      "size": 49.2,
+      "vw": 6.4,
+      "font": "Cal Sans",
+      "text": "Find your exam seat."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.12,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f9fc",
+     "bodyBgHsl": {
+      "h": 216,
+      "s": 0.45,
+      "l": 0.98
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f9fc",
+       "top": 0,
+       "hsl": {
+        "h": 216,
+        "s": 0.45,
+        "l": 0.98
+       }
+      },
+      {
+       "color": "#eff3f7",
+       "top": 2994,
+       "hsl": {
+        "h": 210,
+        "s": 0.33,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 4267,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#3f4858",
+       "share": 0.64
+      },
+      {
+       "color": "#111826",
+       "share": 0.27
+      },
+      {
+       "color": "#fafcfe",
+       "share": 0.04
+      },
+      {
+       "color": "#ddedff",
+       "share": 0.03
+      },
+      {
+       "color": "#201a03",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#071335",
+      "hsl": {
+       "h": 224,
+       "s": 0.77,
+       "l": 0.12
+      },
+      "fg": "#fafcfe"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 8,
+     "inHero": 3,
+     "radius": 10,
+     "height": 40,
+     "withShadow": 7,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Skip to content",
+      "Office sign in",
+      "Find my seat"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 37,
+     "shadowOverlay": 6,
+     "shadowSamples": [
+      "div.tray.lookup-tray → oklab(1 0 0 / 0.6) 0px 0px 0px 1px",
+      "span.peek → oklch(0.2 0.05 90 / 0.25) 0px 0px 0px 1px, rgba(7, 28, 80, 0.45) 0px 8px 18px -8",
+      "form#lookup.tray-in.lookup → oklch(0.32 0.05 262 / 0.14) 0px 0px 0px 1px, oklch(0.25 0.06 264 / 0.05) 0px 1px",
+      "span.tile-ic → rgba(255, 255, 255, 0.18) 0px 1px 0px 0px inset, rgba(0, 2, 20, 0.4) 0px 0px 0px"
+     ],
+     "gradients": 8,
+     "scrims": 0,
+     "gradientSamples": [
+      "div.sky → linear-gradient(oklch(0.74 0.12 245), oklch(0.93 0.04 240) 90%)",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "footer.foot 768px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 4,
+     "roundedBoxes": 28,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 2,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 3182
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "barlow",
+     "cal sans",
+     "barlow semi condensed"
+    ]
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 9,
+   "filled": [
+    0.75,
+    0.62,
+    0.72,
+    0.77,
+    1,
+    0.93,
+    0.85,
+    0.74,
+    0.39
+   ],
+   "motion": {
+    "elements": 20,
+    "css": 1,
+    "transitions": 19,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 7246,
+     "screens": 8.6,
+     "words": 423,
+     "img": 2,
+     "video": 0,
+     "canvas": 0,
+     "svg": 27,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 2,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "gfp-lecture-hall-640.webp",
+      "empty-seats-640.webp"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "chars": 20,
+     "lines": 2,
+     "size": 40,
+     "vw": 10.3,
+     "font": "Cal Sans",
+     "weight": 400,
+     "tracking": -0.012,
+     "leading": 1.04,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 108,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Find your exam seat.",
+     "words": 4,
+     "lines": 2,
+     "size": 40,
+     "font": "Cal Sans"
+    },
+    "headings": [
+     {
+      "text": "Find your exam seat.",
+      "words": 4,
+      "chars": 20,
+      "lines": 2,
+      "size": 40,
+      "vw": 10.3,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.012,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 108,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Enter your hall ticket number",
+      "words": 5,
+      "chars": 29,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.68,
+      "top": 422,
+      "tag": "label",
+      "kind": "heading"
+     },
+     {
+      "text": "Your seat in four steps",
+      "words": 5,
+      "chars": 23,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 953,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Enter your number",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 1126,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "We search every sitting",
+      "words": 4,
+      "chars": 23,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 1634,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Read hall, bench and seat",
+      "words": 5,
+      "chars": 25,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2143,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.18,
+      "top": 2441,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.15,
+      "top": 2441,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.15,
+      "top": 2441,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "Carry the slip",
+      "words": 3,
+      "chars": 14,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2651,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "204",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.15,
+      "top": 2938,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "14",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 2938,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 38.4,
+      "vw": 9.8,
+      "font": "Barlow Semi Condensed",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.12,
+      "top": 2938,
+      "tag": "b",
+      "kind": "heading"
+     },
+     {
+      "text": "What the office runs",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 3228,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Hall setup",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 3464,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Allotment",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 3721,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Invigilation duty",
+      "words": 2,
+      "chars": 17,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 4001,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Publication",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 4258,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Attendance",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 4514,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Your institution",
+      "words": 2,
+      "chars": 16,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 4770,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Two ways in",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5065,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Examination office",
+      "words": 2,
+      "chars": 18,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 5430,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Invigilators",
+      "words": 1,
+      "chars": 12,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Barlow",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.76,
+      "top": 5840,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Walk in knowing your seat.",
+      "words": 5,
+      "chars": 26,
+      "lines": 2,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Cal Sans",
+      "weight": 400,
+      "tracking": -0.005,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.72,
+      "top": 6349,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 24,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 2,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Barlow",
+       "share": 0.95,
+       "mono": false
+      },
+      {
+       "family": "Cal Sans",
+       "share": 0.04,
+       "mono": false
+      },
+      {
+       "family": "Barlow Semi Condensed",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      22,
+      24,
+      32,
+      36,
+      40
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Barlow",
+      "size": 18,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.8
+     },
+     "measureChars": 38,
+     "max": {
+      "size": 40,
+      "vw": 10.3,
+      "font": "Cal Sans",
+      "text": "Find your exam seat."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.12,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f9fc",
+     "bodyBgHsl": {
+      "h": 216,
+      "s": 0.45,
+      "l": 0.98
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f9fc",
+       "top": 0,
+       "hsl": {
+        "h": 216,
+        "s": 0.45,
+        "l": 0.98
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 328,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#eff3f7",
+       "top": 1274,
+       "hsl": {
+        "h": 210,
+        "s": 0.33,
+        "l": 0.95
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#3f4858",
+       "share": 0.64
+      },
+      {
+       "color": "#111826",
+       "share": 0.27
+      },
+      {
+       "color": "#ddedff",
+       "share": 0.03
+      },
+      {
+       "color": "#fafcfe",
+       "share": 0.03
+      },
+      {
+       "color": "#201a03",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#071335",
+      "hsl": {
+       "h": 224,
+       "s": 0.77,
+       "l": 0.12
+      },
+      "fg": "#111826"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 7,
+     "inHero": 2,
+     "radius": 10,
+     "height": 44,
+     "withShadow": 6,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Skip to content",
+      "Find my seat"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 37,
+     "shadowOverlay": 5,
+     "shadowSamples": [
+      "div.tray.lookup-tray → oklab(1 0 0 / 0.6) 0px 0px 0px 1px",
+      "span.peek → oklch(0.2 0.05 90 / 0.25) 0px 0px 0px 1px, rgba(7, 28, 80, 0.45) 0px 8px 18px -8",
+      "form#lookup.tray-in.lookup → oklch(0.32 0.05 262 / 0.14) 0px 0px 0px 1px, oklch(0.25 0.06 264 / 0.05) 0px 1px",
+      "span.tile-ic → rgba(255, 255, 255, 0.18) 0px 1px 0px 0px inset, rgba(0, 2, 20, 0.4) 0px 0px 0px"
+     ],
+     "gradients": 8,
+     "scrims": 0,
+     "gradientSamples": [
+      "div.sky → linear-gradient(oklch(0.74 0.12 245), oklch(0.93 0.04 240) 90%)",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+      "div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "footer.foot 390px"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 4,
+     "roundedBoxes": 28,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 2,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 1,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "barlow",
+     "cal sans",
+     "barlow semi condensed"
+    ]
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "gradient",
+   "width": 1440,
+   "message": "8 gradient fill(s): div.sky → linear-gradient(oklch(0.74 0.12 245), oklch(0.93 0.04 240) 90%) | div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231)) | div.vis → linear-gradient(160deg, rgb(120, 199, 253), rgb(37, 132, 245) 55%, rgb(44, 107, 231))",
+   "fix": "Use a flat colour or a real image. The only gradient allowed by default is a neutral scrim over a photo for legibility.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "shadow",
+   "width": 1440,
+   "message": "38 box-shadow(s) on elements at rest: i.mine → rgba(255, 255, 255, 0.7) 0px 0px 0px 4px, rgba(13, 39, 105, 0.5) 0px 6px 14px -4 | div.tray.lookup-tray → oklab(1 0 0 / 0.6) 0px 0px 0px 1px | span.peek → oklch(0.2 0.05 90 / 0.25) 0px 0px 0px 1px, rgba(7, 28, 80, 0.45) 0px 8px 18px -8",
+   "fix": "Remove. Separate surfaces with a tone step or space. Shadows are for things that really float (menus, dialogs, sticky bars).",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "button-fx",
+   "width": 1440,
+   "message": "Buttons with shadow/glow.",
+   "fix": "Flat fill, one colour.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "hairline",
+   "width": 1440,
+   "message": "1 thin rule(s)/divider line(s): footer.foot 1440px",
+   "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "glass",
+   "width": 1440,
+   "message": "4 backdrop-blur surfaces.",
+   "fix": "One blurred sticky bar at most; glass cards are a tell.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "icon-cards",
+   "width": 1440,
+   "message": "1 row(s) of identical cards each topped with a small icon (6 cards).",
+   "fix": "Replace with one composed section from the direction: a narrative split, a list set in large type, or real imagery per item.",
+   "alsoAt": [
+    768
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "14 different font sizes (12, 14, 15, 16, 17, 18, 19, 20, 22, 24, 30, 46, 60, 76).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 3 picture(s) on the page (2 photographs, footage or raster images, 1 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\desktop-page-01.jpg",
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\desktop-page-02.jpg"
+   ]
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\tablet-page-01.jpg",
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\tablet-page-02.jpg"
+   ]
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\mobile-page-01.jpg",
+    "C:\\Users\\santh\\Desktop\\Projects\\exam-hall-seating-arangement\\.taste-skill\\inspect\\mobile-page-02.jpg"
+   ]
+  }
+ ]
+}
