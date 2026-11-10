@@ -85,8 +85,8 @@ const MAX_BENCHES_PER_COLUMN = 30;
                     <span class="form-hint">Students sitting side by side on one bench.</span>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Quick shape</label>
-                    <div class="quick-shape">
+                    <span class="form-label" id="qs-label">Quick shape</span>
+                    <div class="quick-shape" role="group" aria-labelledby="qs-label">
                       <input class="form-control" type="number" min="1" [max]="maxColumns"
                         [(ngModel)]="quick.columns" aria-label="Columns" />
                       <span class="quick-x">×</span>
@@ -194,7 +194,7 @@ const MAX_BENCHES_PER_COLUMN = 30;
           } @else if (rooms().length === 0) {
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="building" [size]="26" /></div>
-              <h3>No halls on the register</h3>
+              <h2>No halls on the register</h2>
               <p>Add your first examination hall and describe its column layout.</p>
               @if (!showForm()) {
                 <button class="btn btn-primary mt-16" (click)="openForm()">Add the first hall</button>
@@ -206,7 +206,7 @@ const MAX_BENCHES_PER_COLUMN = 30;
                 <article class="card room-card">
                   <div class="room-head">
                     <div class="room-id">
-                      <h3 class="room-name">{{ room.name }}</h3>
+                      <h2 class="room-name">{{ room.name }}</h2>
                       <span class="room-floor">{{ formatFloor(room.floor) }}</span>
                     </div>
                     <div class="room-actions">
@@ -490,8 +490,20 @@ export class RoomManagementComponent implements OnInit {
         columnLayout: [...this.form.columns]
       };
       if (this.editingId()) {
+        // Changing a hall's shape moves benches under students already seated.
+        const before = this.rooms().find(r => r.id === this.editingId());
+        const reshaped = !!before && (before.seatsPerBench !== draft.seatsPerBench
+          || before.columnLayout.join(',') !== draft.columnLayout.join(','));
+        const using = reshaped ? await this.examService.examsUsingRoom(this.editingId()!) : [];
+        const live = using.find(e => e.status === 'published');
+        if (live) {
+          this.toastService.error(`"${live.name}" is published with this hall. Unpublish it before changing the hall's layout.`);
+          return;
+        }
         await this.roomService.updateRoom(this.editingId()!, draft);
-        this.toastService.success(`${name} updated · ${this.capacity()} seats.`);
+        this.toastService.success(using.length
+          ? `${name} updated. Run seating again for ${using.length === 1 ? `"${using[0].name}"` : `${using.length} exams`} that use it.`
+          : `${name} updated · ${this.capacity()} seats.`);
       } else {
         await this.roomService.addRoom(draft);
         this.toastService.success(`${name} added · ${this.capacity()} seats.`);

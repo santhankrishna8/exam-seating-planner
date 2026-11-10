@@ -80,7 +80,7 @@ interface Check { label: string; detail: string; done: boolean; route: string; c
                 @if (scheduled().length === 0) {
                   <div class="empty-state">
                     <div class="empty-state-icon"><app-icon name="calendar" [size]="24" /></div>
-                    <h3>Nothing scheduled</h3>
+                    <h2>Nothing scheduled</h2>
                     <p>Create an examination to allot halls and publish seating.</p>
                     <a routerLink="/admin/exams/new" class="btn btn-primary mt-16">Create examination</a>
                   </div>

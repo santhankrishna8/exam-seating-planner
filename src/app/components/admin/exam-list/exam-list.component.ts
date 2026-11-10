@@ -37,7 +37,7 @@ type Filter = '' | ExamStatus;
           } @else if (exams().length === 0) {
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="document" [size]="26" /></div>
-              <h3>The register is empty</h3>
+              <h2>The register is empty</h2>
               <p>Create an examination to seat students and publish the plan.</p>
               <a routerLink="/admin/exams/new" class="btn btn-primary mt-16">Create examination</a>
             </div>
@@ -61,7 +61,7 @@ type Filter = '' | ExamStatus;
             @if (filtered().length === 0) {
               <div class="card empty-state">
                 <div class="empty-state-icon"><app-icon name="search" [size]="26" /></div>
-                <h3>Nothing matches</h3>
+                <h2>Nothing matches</h2>
                 <p>No examination matches this filter. Clear the search or pick another status.</p>
                 <button class="btn btn-outline mt-16" (click)="clearFilters()">Clear filters</button>
               </div>

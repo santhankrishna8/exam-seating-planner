@@ -17,7 +17,7 @@ interface NavItem { route: string; icon: IconName; label: string; group: string;
   template: `
     <aside class="sidebar" [class.collapsed]="collapsed()">
       <div class="sidebar-header">
-        <a routerLink="/" class="brand" [attr.aria-label]="brand.name + ' home'">
+        <a routerLink="/" class="brand">
           <app-brand-mark [size]="30" />
           @if (!collapsed()) {
             <span class="brand-words">
@@ -112,8 +112,8 @@ interface NavItem { route: string; icon: IconName; label: string; group: string;
 
     .sidebar-nav { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
     .nav-group {
-      font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--text-muted); padding: 14px 10px 5px; opacity: 0.8;
+      font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); padding: 14px 10px 5px;
     }
     .nav-group:first-child { padding-top: 2px; }
 

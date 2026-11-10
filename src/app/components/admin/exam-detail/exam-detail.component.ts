@@ -52,7 +52,7 @@ type DialogKind = '' | 'publish' | 'unpublish' | 'delete' | 'replace';
           <div class="page-content">
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="alert" [size]="26" /></div>
-              <h3>Examination not found</h3>
+              <h1>Examination not found</h1>
               <p>It may have been deleted.</p>
               <a routerLink="/admin/exams" class="btn btn-primary mt-16">Back to examinations</a>
             </div>
@@ -506,7 +506,14 @@ export class ExamDetailComponent implements OnInit {
       // A saved allotment that no longer matches the chosen halls is stale.
       if (exam && students.some(s => s.isSeated)) {
         const picked = new Set(exam.selectedRooms);
-        this.dirty.set(students.some(s => s.isSeated && !picked.has(s.assignedRoom ?? '')));
+        const byId = new Map((rooms ?? []).map(r => [r.id, r]));
+        // Stale when a hall was dropped, or reshaped so a seat no longer exists.
+        this.dirty.set(students.some(s => {
+          if (!s.isSeated) return false;
+          const room = byId.get(s.assignedRoom ?? '');
+          return !picked.has(s.assignedRoom ?? '') || !room
+            || (s.assignedBench ?? 0) > room.benchCount || (s.assignedSeat ?? 0) > room.seatsPerBench;
+        }));
       }
     } finally { this.loading.set(false); }
   }
@@ -669,6 +676,15 @@ export class ExamDetailComponent implements OnInit {
 
   async addTeacher(roomId: string, teacherId: string) {
     if (!teacherId) return;
+    const exam = this.exam();
+    if (exam) {
+      const busy = await this.examService.getBusyTeachers(this.examId, exam.date, exam.startTime, exam.endTime);
+      if (busy.has(teacherId)) {
+        const name = this.teachers().find(t => t.id === teacherId)?.name ?? 'That teacher';
+        this.toastService.error(`${name} is already on duty at another exam at this time.`);
+        return;
+      }
+    }
     const inv = { ...(this.exam()?.invigilators ?? {}) };
     inv[roomId] = [...(inv[roomId] ?? []), teacherId];
     try { await this.saveInv(inv); } catch (e: any) { this.toastService.error(e?.message ?? 'Could not add.'); }

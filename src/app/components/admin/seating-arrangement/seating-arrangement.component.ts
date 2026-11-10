@@ -76,7 +76,7 @@ interface RoomPlan { room: Room; columns: HallColumn[]; seated: number; benches:
             @if (roomPlans().length === 0) {
               <div class="card empty-state">
                 <div class="empty-state-icon"><app-icon name="seat" [size]="26" /></div>
-                <h3>No seating allotted yet</h3>
+                <h2>No seating allotted yet</h2>
                 <p>Go back to the exam and run the allotment — the hall plans appear here once seats are assigned.</p>
                 <a [routerLink]="['/admin/exams', examId]" class="btn btn-primary mt-16">Back to exam</a>
               </div>

@@ -54,21 +54,21 @@ interface DutyRow {
 
           @if (showForm()) {
             <div class="card teacher-form mb-24">
-              <h3 class="mb-16">{{ editingId() ? 'Edit Teacher' : 'Add Teacher' }}</h3>
+              <h2 class="mb-16">{{ editingId() ? 'Edit Teacher' : 'Add Teacher' }}</h2>
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Name *</label>
-                  <input class="form-control" [(ngModel)]="form.name" placeholder="Dr. A. Sharma" />
+                  <label class="form-label" for="t-name">Name *</label>
+                  <input id="t-name" class="form-control" [(ngModel)]="form.name" placeholder="Dr. A. Sharma" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Department</label>
-                  <input class="form-control" [(ngModel)]="form.department" placeholder="Computer Science" />
+                  <label class="form-label" for="t-dept">Department</label>
+                  <input id="t-dept" class="form-control" [(ngModel)]="form.department" placeholder="Computer Science" />
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Phone</label>
-                  <input class="form-control" [(ngModel)]="form.phone" placeholder="98765 43210" />
+                  <label class="form-label" for="t-phone">Phone</label>
+                  <input id="t-phone" class="form-control" type="tel" autocomplete="off" [(ngModel)]="form.phone" placeholder="98765 43210" />
                 </div>
               </div>
               <label class="toggle-row">
@@ -90,7 +90,7 @@ interface DutyRow {
           @if (teachers().length === 0) {
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="badge" [size]="30" /></div>
-              <h3>No teachers yet</h3>
+              <h2>No teachers yet</h2>
               <p>Add your teaching staff so they can be allotted as invigilators.</p>
             </div>
           } @else {
@@ -151,7 +151,7 @@ interface DutyRow {
           @if (filteredDuties().length === 0) {
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="clipboard" [size]="30" /></div>
-              <h3>No duties yet</h3>
+              <h2>No duties yet</h2>
               <p>Auto-allot invigilators from an exam's page and assignments appear here.</p>
             </div>
           } @else {
