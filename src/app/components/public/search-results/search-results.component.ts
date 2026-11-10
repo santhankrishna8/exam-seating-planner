@@ -28,7 +28,7 @@ import { normalizeHallTicket } from '../../../utils/hall-ticket';
           <header class="query-head no-print fade-in">
             <div>
               <span class="eyebrow">Register lookup</span>
-              <h1 class="query-title">{{ hallTicket }}</h1>
+              <h1 class="query-title">{{ hallTicket || 'Find your seat' }}</h1>
               <p class="query-sub">
                 {{ results().length }}
                 {{ results().length === 1 ? 'seat found' : 'seats found' }}
@@ -45,7 +45,7 @@ import { normalizeHallTicket } from '../../../utils/hall-ticket';
           @if (results().length === 0) {
             <div class="card empty-state fade-in">
               <div class="empty-state-icon"><app-icon name="search" [size]="26" /></div>
-              <h3>No seat on the register</h3>
+              <h2>No seat on the register</h2>
               <p>
                 Nothing is published for <strong class="mono">{{ hallTicket }}</strong> yet.
                 Check the number, or ask your examination office whether the seating has been released.

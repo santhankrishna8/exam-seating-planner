@@ -58,7 +58,7 @@ import { BRAND } from '../../brand';
       position: relative; overflow: hidden;
       display: flex; flex-direction: column; justify-content: space-between;
       padding: 34px 38px;
-      background: var(--ink-face); color: var(--ink-text);
+      background: #0b1b4d; color: #fff;
     }
     @media (max-width: 900px) {
       .letterhead { padding: 22px; min-height: 0; }
@@ -67,9 +67,9 @@ import { BRAND } from '../../brand';
 
     .lh-brand { display: flex; align-items: center; gap: 11px; color: inherit; position: relative; z-index: 1; }
     .lh-brand app-brand-mark {
-      --mark-bg: color-mix(in oklch, var(--ink-text) 12%, transparent);
-      --mark-seat: color-mix(in oklch, var(--ink-text) 55%, transparent);
-      --mark-ring: color-mix(in oklch, var(--ink-text) 25%, transparent);
+      --mark-bg: rgb(255 255 255 / 0.12);
+      --mark-seat: rgb(255 255 255 / 0.55);
+      --mark-ring: rgb(255 255 255 / 0.25);
       --mark-you: var(--brand-yellow);
     }
     .lh-words { display: flex; flex-direction: column; }

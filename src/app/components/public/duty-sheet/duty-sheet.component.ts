@@ -33,7 +33,7 @@ import { BRAND } from '../../../brand';
       } @else if (!sheet()) {
         <div class="card empty-state">
           <div class="empty-state-icon"><app-icon name="alert" [size]="26" /></div>
-          <h3>This link isn't active</h3>
+          <h1>This link isn't active</h1>
           <p>The exam may have been withdrawn or the link is mistyped. Ask the examination office for the current link.</p>
         </div>
       } @else {

@@ -25,7 +25,7 @@ import { PublicSeat } from '../../../models/student.model';
             <div class="pv-title-row">
               <div>
                 @if (meta()?.collegeName) { <div class="pv-college">{{ meta()!.collegeName }}</div> }
-                <h2 class="pv-title">{{ meta()?.examName || 'Seating arrangement' }}</h2>
+                <h1 class="pv-title">{{ meta()?.examName || 'Seating arrangement' }}</h1>
                 <div class="pv-meta">
                   @if (meta()?.subjectCode) { <span class="badge badge-gray">{{ meta()!.subjectCode }}</span> }
                   @if (meta()?.date) { <span><app-icon name="calendar" [size]="14" /> {{ meta()!.date | date:'EEE, dd MMM yyyy' }}</span> }
@@ -34,7 +34,7 @@ import { PublicSeat } from '../../../models/student.model';
                 </div>
               </div>
               <div class="pv-search">
-                <input class="form-control" type="text" placeholder="Search hall ticket or name..."
+                <input class="form-control" type="text" aria-label="Search hall ticket or name" placeholder="Search hall ticket or name..."
                   [(ngModel)]="filterQuery" />
               </div>
             </div>
@@ -43,7 +43,7 @@ import { PublicSeat } from '../../../models/student.model';
           @for (room of roomGroups(); track room.key) {
             <div class="room-section card">
               <div class="room-header">
-                <h3>{{ room.roomName }}</h3>
+                <h2>{{ room.roomName }}</h2>
                 @if (room.floor) { <span class="badge badge-gray">{{ room.floor }}</span> }
                 <span class="badge badge-blue">{{ room.seats.length }} candidates</span>
               </div>
@@ -75,7 +75,7 @@ import { PublicSeat } from '../../../models/student.model';
           @if (roomGroups().length === 0) {
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="clipboard" [size]="30" /></div>
-              <h3>No results</h3>
+              <h2>No results</h2>
               <p>No seats match your search query.</p>
             </div>
           }

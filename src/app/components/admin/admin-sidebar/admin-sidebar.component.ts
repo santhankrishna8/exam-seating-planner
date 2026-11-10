@@ -89,9 +89,9 @@ interface NavItem { route: string; icon: IconName; label: string; group: string;
 
     .brand { display: flex; align-items: center; gap: 9px; color: var(--text-primary); min-width: 0; }
     app-brand-mark {
-      --mark-bg: var(--ink-face);
-      --mark-seat: color-mix(in oklch, var(--ink-text) 45%, transparent);
-      --mark-ring: color-mix(in oklch, var(--ink-text) 22%, transparent);
+      --mark-bg: #0b1b4d;
+      --mark-seat: rgb(255 255 255 / 0.45);
+      --mark-ring: rgb(255 255 255 / 0.22);
       --mark-you: var(--brand-yellow);
       flex-shrink: 0;
     }
