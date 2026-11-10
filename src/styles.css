@@ -5,25 +5,25 @@
    seat". Sentence-case labels, big readable type, no jargon.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── DARK (:root, no class) — deep navy ── */
+/* ── DARK (:root, no class) — neutral graphite ── */
 :root {
   color-scheme: dark;
 
-  --bg-primary: #0a1428;
-  --bg-secondary: #101d38;
-  --bg-elevated: #15264a;
-  --bg-card: #0f1c36;
-  --bg-sunken: #081020;
-  --sky-top: #12306b;
-  --sky-bottom: #0a1428;
+  --bg-primary: #111214;
+  --bg-secondary: #1c1d21;
+  --bg-elevated: #24262b;
+  --bg-card: #18191c;
+  --bg-sunken: #0b0c0d;
+  --sky-top: #1d2026;
+  --sky-bottom: #111214;
 
-  --border-color: rgb(255 255 255 / 0.11);
-  --border-strong: rgb(255 255 255 / 0.22);
+  --border-color: rgb(255 255 255 / 0.1);
+  --border-strong: rgb(255 255 255 / 0.2);
   --rule: rgb(255 255 255 / 0.05);
 
-  --text-primary: #f2f6ff;
-  --text-secondary: #b6c4e0;
-  --text-muted: #94a5c8;
+  --text-primary: #f3f4f6;
+  --text-secondary: #c2c5cc;
+  --text-muted: #9a9fa9;
 
   --accent-blue: #6cb2ff;
   --accent-blue-hover: #9ccbff;
@@ -34,7 +34,7 @@
 
   /* Ink = primary action surface (white-on-navy flips in dark). */
   --ink-face: #ffd633;
-  --ink-text: #0b1b4d;
+  --ink-text: #16171a;
   --ink-face-hover: #ffe37a;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -53,7 +53,7 @@
 
   --transition: 0.18s cubic-bezier(0.32, 0.72, 0, 1);
   --sidebar-width: 252px;
-  --mark-word: #f2f6ff;
+  --mark-word: #f3f4f6;
   --mark-word-dot: #6cb2ff;
   --seat-bar: rgb(255 255 255 / 0.06);
   --halo: rgb(255 255 255 / 0.06);
