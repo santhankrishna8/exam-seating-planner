@@ -9,6 +9,7 @@ import { ExamService } from '../../../services/exam.service';
 import { RoomService } from '../../../services/room.service';
 import { TeacherService } from '../../../services/teacher.service';
 import { ToastService } from '../../../services/toast.service';
+import { AttendanceService } from '../../../services/attendance.service';
 import { Student } from '../../../models/student.model';
 import { Room, roomColumns, benchGrid, formatFloor } from '../../../models/room.model';
 import { Exam } from '../../../models/exam.model';
@@ -53,32 +54,11 @@ interface RoomPlan { room: Room; columns: HallColumn[]; seated: number; benches:
               </div>
 
               <div class="map-actions">
-                @if (attendanceMode()) {
-                  <span class="att-tally mono">
-                    <b class="text-success">{{ presentCount() }}</b> present ·
-                    <b class="text-danger">{{ absentCount() }}</b> absent
-                  </span>
-                  <button class="btn btn-ghost" (click)="cancelAttendance()" [disabled]="savingAttendance()">Cancel</button>
-                  <button class="btn btn-success" (click)="saveAttendance()" [disabled]="savingAttendance()">
-                    {{ savingAttendance() ? 'Saving…' : 'Save attendance' }}
-                  </button>
-                } @else {
-                  <button class="btn btn-outline" (click)="attendanceMode.set(true)" [disabled]="allSeated().length === 0">
-                    <app-icon name="check-circle" [size]="15" /> Mark attendance
-                  </button>
-                  <button class="btn btn-outline" (click)="printMap()"><app-icon name="printer" [size]="15" /> Print plan</button>
-                  <button class="btn btn-outline" (click)="printAttendanceSheet()"><app-icon name="clipboard" [size]="15" /> Attendance sheet</button>
-                  <button class="btn btn-ghost" (click)="exportCsv()"><app-icon name="upload" [size]="15" /> CSV</button>
-                }
+                <button class="btn btn-outline" (click)="printMap()"><app-icon name="printer" [size]="15" /> Print plan</button>
+                <button class="btn btn-outline" (click)="printAttendanceSheet()"><app-icon name="clipboard" [size]="15" /> Attendance sheet</button>
+                <button class="btn btn-ghost" (click)="exportCsv()"><app-icon name="upload" [size]="15" /> CSV</button>
               </div>
             </header>
-
-            @if (attendanceMode()) {
-              <div class="notice no-print">
-                <app-icon name="info" [size]="15" />
-                Tap any occupied seat to mark that student absent, then save. Absentees are struck through.
-              </div>
-            }
 
             <!-- Print letterhead -->
             @if (exam(); as ex) {
@@ -146,12 +126,7 @@ interface RoomPlan { room: Room; columns: HallColumn[]; seated: number; benches:
                                     <div class="seat"
                                       [class.taken]="slot.student !== null"
                                       [class.absent]="slot.student && isAbsent(slot.student.hallTicketNo)"
-                                      [class.actionable]="attendanceMode() && slot.student"
-                                      [attr.role]="attendanceMode() && slot.student ? 'button' : null"
-                                      [attr.tabindex]="attendanceMode() && slot.student ? 0 : null"
-                                      (click)="onSeatActivate(slot)"
-                                      (keydown.enter)="onSeatActivate(slot)"
-                                      (keydown.space)="onSeatActivate(slot)">
+                                      >
                                       @if (slot.student) {
                                         <span class="s-ticket mono">{{ slot.student.hallTicketNo }}</span>
                                         <span class="s-name">{{ slot.student.name }}</span>
@@ -353,6 +328,7 @@ export class SeatingArrangementComponent implements OnInit {
   private examService = inject(ExamService);
   private roomService = inject(RoomService);
   private teacherService = inject(TeacherService);
+  private attendance = inject(AttendanceService);
   private toastService = inject(ToastService);
 
   examId = '';
@@ -363,8 +339,6 @@ export class SeatingArrangementComponent implements OnInit {
   teachers = signal<Teacher[]>([]);
   formatFloor = formatFloor;
 
-  attendanceMode = signal(false);
-  savingAttendance = signal(false);
   allSeated = signal<Student[]>([]);
   absentSet = signal<Set<string>>(new Set());
 
@@ -407,39 +381,14 @@ export class SeatingArrangementComponent implements OnInit {
   }
 
   isAbsent = (ticket: string) => this.absentSet().has(ticket);
-  presentCount = () => this.allSeated().length - this.absentCount();
   absentCount = () => this.allSeated().filter(s => this.absentSet().has(s.hallTicketNo)).length;
   roomAbsentCount = (roomId: string) =>
     this.allSeated().filter(s => s.assignedRoom === roomId && this.absentSet().has(s.hallTicketNo)).length;
 
-  onSeatActivate(slot: SeatSlot) {
-    if (!this.attendanceMode() || !slot.student) return;
-    this.toggleAbsent(slot.student.hallTicketNo);
-  }
-
-  toggleAbsent(ticket: string) {
-    const next = new Set(this.absentSet());
-    if (next.has(ticket)) next.delete(ticket); else next.add(ticket);
-    this.absentSet.set(next);
-  }
-
-  private seedAbsent() {
-    this.absentSet.set(new Set(this.allSeated().filter(s => s.absent).map(s => s.hallTicketNo)));
-  }
-
-  cancelAttendance() { this.seedAbsent(); this.attendanceMode.set(false); }
-
-  async saveAttendance() {
-    this.savingAttendance.set(true);
-    try {
-      const updates = this.allSeated().map(s => ({ hallTicketNo: s.hallTicketNo, absent: this.absentSet().has(s.hallTicketNo) }));
-      await this.examService.saveAttendance(this.examId, updates);
-      this.allSeated.set(this.allSeated().map(s => ({ ...s, absent: this.absentSet().has(s.hallTicketNo) })));
-      this.toastService.success(`Attendance saved · ${this.presentCount()} present, ${this.absentCount()} absent.`);
-      this.attendanceMode.set(false);
-    } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not save attendance.');
-    } finally { this.savingAttendance.set(false); }
+  /** Absentees come from the invigilators' submitted sheets — one source of truth. */
+  private async loadAbsent() {
+    const sheets = await this.attendance.forExam(this.examId).catch(() => []);
+    this.absentSet.set(new Set(sheets.flatMap(x => x.absentHallTickets)));
   }
 
   /** Invigilator names assigned to a hall, for the hall header. */
@@ -460,7 +409,7 @@ export class SeatingArrangementComponent implements OnInit {
       this.exam.set(exam);
       this.teachers.set(teachers ?? []);
       this.allSeated.set(students.filter(s => s.isSeated));
-      this.seedAbsent();
+      await this.loadAbsent();
       this.roomPlans.set(this.buildPlans(rooms ?? []));
     } catch (e: any) {
       this.toastService.error(e?.message ?? 'Could not load the hall plans.');

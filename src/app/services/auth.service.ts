@@ -3,9 +3,7 @@ import {
   Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, user, User
 } from '@angular/fire/auth';
-import {
-  Firestore, doc, setDoc, serverTimestamp
-} from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, serverTimestamp } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -17,15 +15,6 @@ export class AuthService {
 
   get currentUid(): string | null {
     return this.auth.currentUser?.uid ?? null;
-  }
-
-  get currentEmail(): string | null {
-    return this.auth.currentUser?.email ?? null;
-  }
-
-  /** Plain account (no college doc) — used for invigilator/teacher portal logins. */
-  async signUp(email: string, password: string): Promise<void> {
-    await createUserWithEmailAndPassword(this.auth, email, password);
   }
 
   async register(email: string, password: string, collegeName: string, collegeCode: string): Promise<void> {

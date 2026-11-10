@@ -7,7 +7,6 @@ export interface Student {
   assignedBench?: number;
   assignedSeat?: number;
   isSeated: boolean;
-  absent?: boolean;        // attendance: true = marked absent for this exam
 }
 
 export interface PublicSeat {

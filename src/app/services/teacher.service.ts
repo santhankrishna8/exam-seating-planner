@@ -34,7 +34,6 @@ export class TeacherService {
       id,
       name: d['name'] ?? '',
       department: d['department'] ?? '',
-      email: d['email'] ?? '',
       phone: d['phone'] ?? '',
       isActive: d['isActive'] ?? true
     };
@@ -42,7 +41,7 @@ export class TeacherService {
 
   async addTeacher(t: Omit<Teacher, 'id'>): Promise<void> {
     await addDoc(this.teachersCol(), {
-      name: t.name, department: t.department ?? '', email: t.email ?? '',
+      name: t.name, department: t.department ?? '',
       phone: t.phone ?? '', isActive: t.isActive ?? true, createdAt: serverTimestamp()
     });
   }

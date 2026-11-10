@@ -6,6 +6,7 @@ import { ToastComponent } from '../../../shared/toast/toast.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { LoaderComponent } from '../../../shared/loader/loader.component';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { ExamService } from '../../../services/exam.service';
 import { RoomService } from '../../../services/room.service';
 import { ToastService } from '../../../services/toast.service';
 import { Room, benchGrid, benchCountOf, layoutSummary, formatFloor } from '../../../models/room.model';
@@ -360,6 +361,7 @@ const MAX_BENCHES_PER_COLUMN = 30;
 })
 export class RoomManagementComponent implements OnInit {
   private roomService = inject(RoomService);
+  private examService = inject(ExamService);
   private toastService = inject(ToastService);
 
   rooms = signal<Room[]>([]);
@@ -507,6 +509,12 @@ export class RoomManagementComponent implements OnInit {
     const room = this.deleteTarget();
     if (!room) return;
     try {
+      const using = await this.examService.examsUsingRoom(room.id);
+      if (using.length) {
+        this.toastService.error(`${room.name} is used by "${using[0].name}"${using.length > 1 ? ` and ${using.length - 1} more` : ''}. Remove it there first.`);
+        this.deleteTarget.set(null);
+        return;
+      }
       await this.roomService.deleteRoom(room.id);
       this.toastService.success(`${room.name} deleted.`);
       this.loadRooms();

@@ -128,7 +128,6 @@ import { normalizeHallTicket } from '../../../utils/hall-ticket';
             </div>
           </div>
           <nav class="foot-links" aria-label="Footer">
-            <a routerLink="/teacher/login">Invigilator portal</a>
             <a routerLink="/admin/login">Examination office</a>
             <a routerLink="/admin/register">Register an institution</a>
           </nav>
@@ -268,7 +267,7 @@ export class LandingComponent {
     {
       index: '02',
       title: 'Invigilation duty',
-      text: 'Duties are spread by workload and department, a teacher is never booked twice at the same hour, and each invigilator gets their own portal and attendance sheet.'
+      text: 'Duties are spread by workload and department, a teacher is never booked twice at the same hour, and each hall gets a private link where the invigilator marks attendance — no account needed.'
     },
     {
       index: '03',

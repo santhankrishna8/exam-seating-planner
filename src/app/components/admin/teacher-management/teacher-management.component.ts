@@ -31,7 +31,7 @@ interface DutyRow {
     <app-confirm-dialog
       [visible]="deleteTarget() !== null"
       title="Remove Teacher"
-      message="Remove this teacher from your staff list? Existing duty rosters keep their names."
+      message="Remove this teacher? They are also taken off any exam duty roster."
       confirmLabel="Remove"
       (confirm)="confirmDelete()"
       (cancel)="deleteTarget.set(null)"
@@ -47,7 +47,6 @@ interface DutyRow {
               <h1 class="page-title">Invigilators</h1>
               <p class="page-sub">
                 {{ teachers().length }} on roll · {{ availableCount() }} available for duty
-                @if (withoutEmail() > 0) { · <span class="text-warning">{{ withoutEmail() }} without an email</span> }
               </p>
             </div>
             <button class="btn btn-primary" (click)="openForm()"><app-icon name="plus" [size]="15" /> Add invigilator</button>
@@ -67,11 +66,6 @@ interface DutyRow {
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Email</label>
-                  <input class="form-control" type="email" [(ngModel)]="form.email" placeholder="a.sharma@college.edu" />
-                  <span class="form-hint">Required for the invigilator portal — duties are matched to this address.</span>
-                </div>
                 <div class="form-group">
                   <label class="form-label">Phone</label>
                   <input class="form-control" [(ngModel)]="form.phone" placeholder="98765 43210" />
@@ -118,9 +112,8 @@ interface DutyRow {
                       <td><strong>{{ t.name }}</strong></td>
                       <td>{{ t.department || '—' }}</td>
                       <td class="contact">
-                        @if (t.email) { <span>{{ t.email }}</span> }
-                        @if (t.phone) { <span class="text-muted">{{ t.phone }}</span> }
-                        @if (!t.email && !t.phone) { <span class="text-muted">—</span> }
+                                                @if (t.phone) { <span class="text-muted">{{ t.phone }}</span> }
+                        @if (!t.phone) { <span class="text-muted">—</span> }
                       </td>
                       <td class="duty-n">{{ dutyCountFor(t.id) }}</td>
                       <td>
@@ -212,11 +205,9 @@ export class TeacherManagementComponent implements OnInit {
   deleteTarget = signal<string | null>(null);
   saving = signal(false);
 
-  form: Omit<Teacher, 'id'> = { name: '', department: '', email: '', phone: '', isActive: true };
+  form: Omit<Teacher, 'id'> = { name: '', department: '', phone: '', isActive: true };
 
   availableCount = () => this.teachers().filter(t => t.isActive).length;
-  /** Duty documents are keyed by email, so staff without one get no portal login. */
-  withoutEmail = () => this.teachers().filter(t => !(t.email ?? '').trim()).length;
   dutyCountFor = (id: string) => this.duties().filter(d => d.teacherId === id).length;
 
   ngOnInit() { this.load(); this.loadDuties(); }
@@ -233,7 +224,6 @@ export class TeacherManagementComponent implements OnInit {
     const teacherName = new Map((teachers ?? []).map(t => [t.id, t.name]));
     const rows: DutyRow[] = [];
     for (const e of exams ?? []) {
-      if (e.status === 'archived') continue;
       for (const [roomId, ids] of Object.entries(e.invigilators ?? {})) {
         for (const tid of ids) {
           rows.push({
@@ -265,11 +255,11 @@ export class TeacherManagementComponent implements OnInit {
 
   openForm() { this.resetForm(); this.showForm.set(true); }
   cancelForm() { this.showForm.set(false); this.editingId.set(null); }
-  resetForm() { this.form = { name: '', department: '', email: '', phone: '', isActive: true }; this.editingId.set(null); }
+  resetForm() { this.form = { name: '', department: '', phone: '', isActive: true }; this.editingId.set(null); }
 
   editTeacher(t: Teacher) {
     this.editingId.set(t.id);
-    this.form = { name: t.name, department: t.department ?? '', email: t.email ?? '', phone: t.phone ?? '', isActive: t.isActive };
+    this.form = { name: t.name, department: t.department ?? '', phone: t.phone ?? '', isActive: t.isActive };
     this.showForm.set(true);
   }
 
@@ -294,6 +284,7 @@ export class TeacherManagementComponent implements OnInit {
     const id = this.deleteTarget();
     if (!id) return;
     try {
+      await this.examService.removeTeacherFromExams(id);
       await this.teacherService.deleteTeacher(id);
       this.toastService.success('Teacher removed.');
       this.load();

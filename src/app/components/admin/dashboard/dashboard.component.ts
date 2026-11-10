@@ -222,7 +222,7 @@ export class DashboardComponent implements OnInit {
   shortcuts: { route: string; icon: IconName; title: string; sub: string }[] = [
     { route: '/admin/rooms', icon: 'building', title: 'Halls', sub: 'Column layouts and capacity' },
     { route: '/admin/teachers', icon: 'badge', title: 'Invigilators', sub: 'Staff available for duty' },
-    { route: '/admin/exams', icon: 'clipboard', title: 'Examinations', sub: 'Allot, publish and archive' }
+    { route: '/admin/exams', icon: 'clipboard', title: 'Examinations', sub: 'Seat students and publish' }
   ];
 
   totalCapacity = () => this.rooms().reduce((s, r) => s + r.totalCapacity, 0);
@@ -233,7 +233,7 @@ export class DashboardComponent implements OnInit {
   /** Upcoming first; if nothing is upcoming, show the most recent instead. */
   scheduled = () => {
     const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
-    const live = this.exams().filter(e => e.status !== 'archived');
+    const live = this.exams();
     const upcoming = live.filter(e => e.date >= midnight).sort((a, b) => +a.date - +b.date);
     const past = live.filter(e => e.date < midnight).sort((a, b) => +b.date - +a.date);
     return [...upcoming, ...past].slice(0, 6).map(exam => {
@@ -302,6 +302,6 @@ export class DashboardComponent implements OnInit {
   }
 
   statusBadge(s: string): string {
-    return s === 'published' ? 'badge-green' : s === 'archived' ? 'badge-gray' : 'badge-amber';
+    return s === 'published' ? 'badge-green' : 'badge-amber';
   }
 }

@@ -2,33 +2,25 @@ rules_version = '2';
 
 // Exam Hall Seating — Firestore security model
 //
-//   colleges/{uid}                         → private admin workspace (owner only)
-//   colleges/{uid}/{document=**}           → rooms, exams, students (owner only)
-//   publicExams/{examId}                   → world-readable, owner-writable
-//   publicExams/{examId}/seats/{ht}        → world-readable, owner-writable
-//   duties/{dutyId}                        → owner-writable; the assigned invigilator
-//                                            (matched by email) can read + submit attendance
-//
-// Deploy with:  firebase deploy --only firestore:rules
+//   colleges/{uid}/**                 → private admin workspace (owner only)
+//   publicExams/{examId}              → readable by id (no listing), owner-writable
+//   publicExams/{examId}/seats/{ht}   → world-readable (students search), owner-writable
+//   attendance/{token}                → one sheet per exam + hall. The token is the
+//                                       invigilator's private link: whoever holds it can
+//                                       read the sheet and submit absentees, nothing else.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Private admin workspace ──────────────────────────────
     match /colleges/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
-
       match /{document=**} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
 
-    // ── Public, published seating ────────────────────────────
-    // Students look these up with no login, so reads are open.
     match /publicExams/{examId} {
-      allow read: if true;
-
-      // Only the owning admin may create/update/delete the public record.
-      // (publishExam() stamps ownerUid on the metadata doc.)
+      // get by id only — the list of every college's exams is not public
+      allow get: if true;
       allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.ownerUid;
       allow update: if request.auth != null
@@ -37,7 +29,6 @@ service cloud.firestore {
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.ownerUid;
 
-      // Seats: world-readable; writable only by the exam's owner.
       match /seats/{hallTicket} {
         allow read: if true;
         allow write: if request.auth != null
@@ -45,20 +36,20 @@ service cloud.firestore {
       }
     }
 
-    // ── Invigilation duties ──────────────────────────────────
-    // The college admin (owner) creates/deletes them. The assigned invigilator,
-    // matched by their signed-in email, may read and submit attendance.
-    match /duties/{dutyId} {
-      allow read: if request.auth != null
-                  && (resource.data.teacherEmail == request.auth.token.email
-                      || request.auth.uid == resource.data.ownerUid);
-      allow create: if request.auth != null
-                    && request.auth.uid == request.resource.data.ownerUid;
-      allow delete: if request.auth != null
-                    && request.auth.uid == resource.data.ownerUid;
-      allow update: if request.auth != null
-                    && (request.auth.uid == resource.data.ownerUid
-                        || resource.data.teacherEmail == request.auth.token.email);
+    // Students search "seats" across all exams by hall ticket.
+    match /{path=**}/seats/{hallTicket} {
+      allow read: if true;
+    }
+
+    match /attendance/{token} {
+      allow get: if true;                       // the token is the secret
+      allow list: if request.auth != null && request.auth.uid == resource.data.ownerUid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerUid;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
+      allow update: if request.auth != null && request.auth.uid == resource.data.ownerUid
+                    // link holders may only touch the attendance fields
+                    || request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['absentHallTickets', 'submitted', 'submittedAt']);
     }
   }
 }

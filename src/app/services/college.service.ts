@@ -29,9 +29,4 @@ export class CollegeService {
     this.cache.set(uid, college);
     return college;
   }
-
-  /** An account belongs to an examination office if it owns a college document. */
-  async isOffice(): Promise<boolean> {
-    return (await this.getMyCollege()) !== null;
-  }
 }

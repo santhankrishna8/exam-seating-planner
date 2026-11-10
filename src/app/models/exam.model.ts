@@ -1,4 +1,5 @@
-export type ExamStatus = 'draft' | 'published' | 'archived';
+// Two states only: a draft is private, a published exam is visible to students.
+export type ExamStatus = 'draft' | 'published';
 export type ShuffleMode = 'sequential' | 'random' | 'department';
 
 export interface Exam {

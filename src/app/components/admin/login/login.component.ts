@@ -38,7 +38,6 @@ import { AuthShellComponent } from '../../../shared/auth-shell/auth-shell.compon
       </form>
 
       <p class="alt">No account yet? <a routerLink="/admin/register">Register your institution</a></p>
-      <p class="alt"><a routerLink="/teacher/login">Invigilator portal →</a></p>
     </app-auth-shell>
   `,
   styles: [`

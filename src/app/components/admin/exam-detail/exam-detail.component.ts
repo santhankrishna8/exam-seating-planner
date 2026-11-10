@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { LoaderComponent } from '../../../shared/loader/loader.component';
@@ -12,49 +13,35 @@ import { SeatingService } from '../../../services/seating.service';
 import { ToastService } from '../../../services/toast.service';
 import { FileUploadService } from '../../../services/file-upload.service';
 import { TeacherService } from '../../../services/teacher.service';
-import { DutyService } from '../../../services/duty.service';
-import { CollegeService } from '../../../services/college.service';
-import { Exam } from '../../../models/exam.model';
+import { AttendanceService } from '../../../services/attendance.service';
+import { Exam, ShuffleMode } from '../../../models/exam.model';
 import { Student } from '../../../models/student.model';
-import { Room, formatFloor } from '../../../models/room.model';
+import { Room, formatFloor, roomCapacity } from '../../../models/room.model';
 import { Teacher } from '../../../models/teacher.model';
-import { Duty } from '../../../models/duty.model';
+import { Attendance } from '../../../models/attendance.model';
 import { firstValueFrom } from 'rxjs';
 
-interface Stage { key: string; label: string; state: 'done' | 'active' | 'todo'; note: string; }
+type DialogKind = '' | 'publish' | 'unpublish' | 'delete' | 'replace';
 
 @Component({
   selector: 'app-exam-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdminSidebarComponent, LoaderComponent, ToastComponent, ConfirmDialogComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AdminSidebarComponent, LoaderComponent, ToastComponent, ConfirmDialogComponent, IconComponent],
   template: `
     <app-toast />
-    <app-confirm-dialog
-      [visible]="showPublishDialog()"
-      title="Publish seating"
-      message="Publishing makes this seating visible to every student and to the assigned invigilators. You can archive it later to withdraw it."
-      confirmLabel="Publish"
-      [destructive]="false"
-      (confirm)="publishExam()"
-      (cancel)="showPublishDialog.set(false)"
-    />
-    <app-confirm-dialog
-      [visible]="showArchiveDialog()"
-      title="Archive examination"
-      message="Archived examinations disappear from the public lookup. The record is kept."
-      confirmLabel="Archive"
-      [destructive]="false"
-      (confirm)="archiveExam()"
-      (cancel)="showArchiveDialog.set(false)"
-    />
-    <app-confirm-dialog
-      [visible]="showDeleteDialog()"
-      title="Delete examination"
-      message="This permanently removes the examination, its roster and any published seating. It cannot be undone."
-      confirmLabel="Delete"
-      (confirm)="deleteExam()"
-      (cancel)="showDeleteDialog.set(false)"
-    />
+    <app-confirm-dialog [visible]="dialog() === 'publish'" title="Publish seating"
+      message="Students will be able to find their seat, and invigilators get their attendance links. You can unpublish any time."
+      confirmLabel="Publish" [destructive]="false" (confirm)="publish()" (cancel)="dialog.set('')" />
+    <app-confirm-dialog [visible]="dialog() === 'unpublish'" title="Unpublish seating"
+      message="Students will no longer see their seats and invigilator links stop working. Attendance already submitted will be cleared. The draft is kept."
+      confirmLabel="Unpublish" (confirm)="unpublish()" (cancel)="dialog.set('')" />
+    <app-confirm-dialog [visible]="dialog() === 'delete'" title="Delete examination"
+      message="This permanently removes the examination, its students and anything published. It cannot be undone."
+      confirmLabel="Delete" (confirm)="deleteExam()" (cancel)="dialog.set('')" />
+    <app-confirm-dialog [visible]="dialog() === 'replace'" title="Replace students"
+      message="Uploading a new file replaces the current students and clears the seating you have already run."
+      confirmLabel="Choose file" [destructive]="false" (confirm)="pickFile()" (cancel)="dialog.set('')" />
+    <input #fileInput type="file" accept=".csv,.xlsx,.xls" hidden (change)="onFileChange($event)" />
 
     <div class="admin-layout">
       <app-admin-sidebar />
@@ -66,7 +53,7 @@ interface Stage { key: string; label: string; state: 'done' | 'active' | 'todo';
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="alert" [size]="26" /></div>
               <h3>Examination not found</h3>
-              <p>It may have been deleted from the register.</p>
+              <p>It may have been deleted.</p>
               <a routerLink="/admin/exams" class="btn btn-primary mt-16">Back to examinations</a>
             </div>
           </div>
@@ -78,240 +65,245 @@ interface Stage { key: string; label: string; state: 'done' | 'active' | 'todo';
                 <span class="eyebrow">{{ exam()!.subjectCode || 'Examination' }}</span>
                 <h1 class="page-title">{{ exam()!.name }}</h1>
                 <div class="exam-meta">
-                  <span [class]="'badge ' + statusBadge(exam()!.status)">{{ exam()!.status }}</span>
+                  <span [class]="'badge ' + (published() ? 'badge-green' : 'badge-amber')">{{ published() ? 'published' : 'draft' }}</span>
                   <span><app-icon name="calendar" [size]="13" /> {{ exam()!.date | date:'EEE, dd MMM yyyy' }}</span>
                   <span><app-icon name="clock" [size]="13" /> {{ exam()!.startTime }} – {{ exam()!.endTime }}</span>
-                  @if (exam()!.department) { <span><app-icon name="building" [size]="13" /> {{ exam()!.department }}</span> }
                 </div>
               </div>
-
               <div class="exam-actions">
-                @if (exam()!.status === 'draft') {
-                  <a [routerLink]="['/admin/exams', examId, 'edit']" class="btn btn-outline"><app-icon name="pencil" [size]="15" /> Edit</a>
-                }
-                @if (exam()!.status === 'published') {
-                  <a [routerLink]="['/exam', examId]" class="btn btn-outline" target="_blank"><app-icon name="eye" [size]="15" /> Public view</a>
-                  <button class="btn btn-outline" (click)="showArchiveDialog.set(true)">Archive</button>
-                }
+                <a [routerLink]="['/admin/exams', examId, 'edit']" class="btn btn-outline"><app-icon name="pencil" [size]="15" /> Edit details</a>
                 <button class="btn btn-ghost btn-icon" title="Delete examination" aria-label="Delete examination"
-                  (click)="showDeleteDialog.set(true)" [disabled]="actionLoading()">
-                  <app-icon name="trash" [size]="16" />
-                </button>
+                  (click)="dialog.set('delete')" [disabled]="busy()"><app-icon name="trash" [size]="16" /></button>
               </div>
             </header>
 
-            <!-- Workflow rail -->
             <ol class="stages">
-              @for (s of stages(); track s.key) {
-                <li class="stage" [class.done]="s.state === 'done'" [class.active]="s.state === 'active'">
-                  <span class="stage-dot">
-                    @if (s.state === 'done') { <app-icon name="check-circle" [size]="14" /> }
-                  </span>
-                  <span class="stage-body">
-                    <span class="stage-label">{{ s.label }}</span>
-                    <span class="stage-note">{{ s.note }}</span>
-                  </span>
+              @for (s of stages(); track s.label) {
+                <li class="stage" [class.done]="s.done" [class.active]="s.active">
+                  <span class="stage-dot">@if (s.done) { <app-icon name="check-circle" [size]="14" /> }</span>
+                  <span class="stage-body"><span class="stage-label">{{ s.label }}</span><span class="stage-note">{{ s.note }}</span></span>
                 </li>
               }
             </ol>
 
-            <div class="detail-grid">
-              <div class="detail-main">
-                <!-- Roster -->
-                <section class="card panel">
-                  <header class="panel-head">
-                    <div>
-                      <h2 class="panel-title">Roster</h2>
-                      <span class="panel-sub">
-                        @if (students().length) {
-                          {{ students().length }} candidates · {{ seatedCount() }} seated
-                          @if (unseatedCount() > 0) { <b class="text-danger">· {{ unseatedCount() }} unseated</b> }
-                        } @else { No candidates uploaded }
-                      </span>
-                    </div>
-                    @if (exam()!.status === 'draft') {
-                      <label class="btn btn-outline btn-sm upload-btn">
-                        <app-icon name="upload" [size]="14" />
-                        {{ students().length ? 'Replace file' : 'Upload roster' }}
-                        <input type="file" accept=".csv,.xlsx,.xls" (change)="onFileChange($event)" [disabled]="actionLoading()" />
+            <!-- 1 · Students -->
+            <section class="card panel step-card">
+              <header class="panel-head">
+                <div>
+                  <h2 class="panel-title"><span class="step-num" [class.done]="students().length > 0">1</span>Students</h2>
+                  <span class="panel-sub">
+                    @if (students().length) { {{ students().length }} candidates } @else { Upload a CSV or Excel file: hall ticket, name, department (optional) }
+                  </span>
+                </div>
+                @if (!published()) {
+                  <button class="btn btn-outline btn-sm" (click)="askUpload()" [disabled]="busy()">
+                    <app-icon name="upload" [size]="14" /> {{ students().length ? 'Replace file' : 'Upload students' }}
+                  </button>
+                }
+              </header>
+              @if (students().length) {
+                <div class="table-wrapper">
+                  <table>
+                    <thead><tr><th>Hall ticket</th><th>Name</th><th>Dept</th>
+                      @if (seatingGenerated()) { <th>Hall</th><th>Bench</th><th>Seat</th> }
+                      @if (published()) { <th>Attendance</th> }</tr></thead>
+                    <tbody>
+                      @for (s of visibleStudents(); track s.hallTicketNo) {
+                        <tr [class.unseated]="seatingGenerated() && !s.isSeated">
+                          <td class="mono">{{ s.hallTicketNo }}</td>
+                          <td>{{ s.name }}</td>
+                          <td>{{ s.department || '—' }}</td>
+                          @if (seatingGenerated()) {
+                            <td>{{ s.isSeated ? roomName(s.assignedRoom) : 'Unseated' }}</td>
+                            <td class="mono">{{ s.isSeated ? s.assignedBench : '—' }}</td>
+                            <td class="mono">{{ s.isSeated ? s.assignedSeat : '—' }}</td>
+                          }
+                          @if (published()) { <td>@if (absentSet().has(s.hallTicketNo)) { <span class="badge badge-red">Absent</span> } @else { — }</td> }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                @if (students().length > visibleStudents().length) {
+                  <div class="panel-foot">
+                    <span class="text-muted">Showing {{ visibleStudents().length }} of {{ students().length }}</span>
+                    <button class="btn btn-ghost btn-sm" (click)="showAll.set(true)">Show all</button>
+                  </div>
+                }
+              }
+            </section>
+
+            <!-- 2 · Halls & seating -->
+            <section class="card panel step-card">
+              <header class="panel-head">
+                <div>
+                  <h2 class="panel-title"><span class="step-num" [class.done]="seatingGenerated() && !dirty()">2</span>Halls &amp; seating</h2>
+                  <span class="panel-sub">Choose halls and how students are placed. Seats fill down each column, front to back.</span>
+                </div>
+              </header>
+              <div class="panel-body">
+                @if (rooms().length === 0) {
+                  <p class="text-muted">No halls yet. <a routerLink="/admin/rooms">Add a hall</a> first.</p>
+                } @else {
+                  <div class="hall-pick">
+                    @for (r of rooms(); track r.id) {
+                      <label class="hall-opt" [class.on]="isPicked(r.id)">
+                        <input type="checkbox" [checked]="isPicked(r.id)" [disabled]="published() || busy()" (change)="toggleRoom(r.id)" />
+                        <span class="grow"><b>{{ r.name }}</b> <small>{{ formatFloor(r.floor) }}</small></span>
+                        <span class="mono">{{ seatsIn(r) }} seats</span>
                       </label>
                     }
-                  </header>
-
-                  @if (students().length === 0) {
-                    <div class="empty-state">
-                      <div class="empty-state-icon"><app-icon name="users" [size]="24" /></div>
-                      <h3>No candidates yet</h3>
-                      <p>Upload a CSV or Excel file with columns: hall ticket, name, department, section.</p>
-                    </div>
-                  } @else {
-                    <div class="table-wrapper">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Hall ticket</th>
-                            <th>Name</th>
-                            <th>Department</th>
-                            @if (seatingGenerated()) { <th>Hall</th><th>Bench</th><th>Seat</th> }
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (s of visibleStudents(); track s.hallTicketNo) {
-                            <tr [class.unseated]="seatingGenerated() && !s.isSeated">
-                              <td class="mono">{{ s.hallTicketNo }}</td>
-                              <td>{{ s.name }}</td>
-                              <td>{{ s.department || '—' }}</td>
-                              @if (seatingGenerated()) {
-                                <td>{{ s.isSeated ? getRoomName(s.assignedRoom) : 'Unseated' }}</td>
-                                <td class="mono">{{ s.isSeated ? s.assignedBench : '—' }}</td>
-                                <td class="mono">{{ s.isSeated ? s.assignedSeat : '—' }}</td>
-                              }
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                    @if (students().length > visibleStudents().length) {
-                      <div class="panel-foot">
-                        <span class="text-muted">Showing {{ visibleStudents().length }} of {{ students().length }}</span>
-                        <button class="btn btn-ghost btn-sm" (click)="showAll.set(true)">Show all</button>
-                      </div>
-                    }
-                  }
-                </section>
-
-                <!-- Invigilators -->
-                <section class="card panel">
-                  <header class="panel-head">
-                    <div>
-                      <h2 class="panel-title">Invigilation duty</h2>
-                      <span class="panel-sub">{{ exam()!.teachersPerRoom }} per hall · {{ assignedInvigilatorCount() }} on duty</span>
-                    </div>
-                    <div class="panel-actions">
-                      @if (teachers().length === 0) {
-                        <a routerLink="/admin/teachers" class="btn btn-outline btn-sm"><app-icon name="badge" [size]="14" /> Add staff</a>
-                      } @else {
-                        @if (hasInvigilators()) {
-                          <button class="btn btn-ghost btn-sm" (click)="clearInvigilators()" [disabled]="actionLoading()">Clear</button>
-                        }
-                        <button class="btn btn-outline btn-sm" (click)="allotInvigilators()" [disabled]="actionLoading()">
-                          <app-icon name="shuffle" [size]="14" /> {{ hasInvigilators() ? 'Re-allot' : 'Auto-allot' }}
-                        </button>
-                      }
-                    </div>
-                  </header>
-
-                  @if (hasInvigilators()) {
-                    <div class="table-wrapper">
-                      <table>
-                        <thead><tr><th>Hall</th><th>Invigilator(s)</th></tr></thead>
-                        <tbody>
-                          @for (row of invigilatorRoster(); track row.roomId) {
-                            <tr>
-                              <td><strong>{{ row.roomName }}</strong></td>
-                              <td>
-                                @if (row.teachers.length) {
-                                  <div class="chips">
-                                    @for (t of row.teachers; track t.id) {
-                                      <span class="chip"><app-icon name="badge" [size]="12" /> {{ t.name }}@if (t.department) {<span class="text-muted"> · {{ t.department }}</span>}</span>
-                                    }
-                                  </div>
-                                } @else {
-                                  <span class="text-warning">Unstaffed</span>
-                                }
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                    <div class="panel-foot">
-                      <span class="text-muted">Invigilator attendance: <strong>{{ submittedCount() }}</strong> / {{ submittedDuties().length }} submitted</span>
-                      @if (hasSubmissions()) {
-                        <button class="btn btn-outline btn-sm" (click)="applySubmittedAttendance()" [disabled]="actionLoading()">
-                          <app-icon name="check-circle" [size]="14" /> Apply to records
-                        </button>
-                      }
-                    </div>
-                  } @else {
-                    <div class="empty-state">
-                      <div class="empty-state-icon"><app-icon name="badge" [size]="24" /></div>
-                      <h3>No duty roster yet</h3>
-                      <p>{{ teachers().length ? 'Auto-allot spreads duty by workload and department, and never books a teacher twice at the same hour.' : 'Add teaching staff before rostering invigilators.' }}</p>
-                    </div>
-                  }
-                </section>
-              </div>
-
-              <!-- Allotment sidebar -->
-              <aside class="detail-side">
-                <section class="card panel">
-                  <header class="panel-head">
-                    <h2 class="panel-title">Hall allotment</h2>
-                  </header>
-
-                  <div class="allot-body">
-                    <div class="allot-figures">
-                      <div>
-                        <span class="af-label">Candidates</span>
-                        <span class="af-value">{{ students().length }}</span>
-                      </div>
-                      <div>
-                        <span class="af-label">Seats available</span>
-                        <span class="af-value" [class.text-danger]="capacityShort()">{{ capacity() }}</span>
-                      </div>
-                    </div>
-
-                    @if (capacityShort()) {
-                      <p class="allot-warn">
-                        <app-icon name="alert" [size]="14" />
-                        The selected halls are short by {{ students().length - capacity() }} seats.
-                        Add halls in the exam settings or turn off the gap-seat rule.
-                      </p>
-                    }
-
-                    @if (seatingGenerated()) {
-                      <ul class="hall-list">
-                        @for (row of allotmentByRoom(); track row.roomId) {
-                          <li>
-                            <span class="hl-name">{{ row.roomName }}</span>
-                            <span class="hl-floor">{{ row.floor }}</span>
-                            <span class="hl-count mono">{{ row.count }}</span>
-                          </li>
-                        }
-                      </ul>
-                      <a [routerLink]="['/admin/exams', examId, 'seating']" class="btn btn-outline w-full">
-                        <app-icon name="seat" [size]="15" /> Open hall plan
-                      </a>
-                    } @else {
-                      <p class="allot-hint">
-                        Seats are filled down each column of every hall, front to back.
-                        {{ modeHint() }}
-                      </p>
-                    }
-
-                    @if (exam()!.status === 'draft') {
-                      <button class="btn btn-outline w-full mt-8" (click)="generateSeating()"
-                        [disabled]="actionLoading() || students().length === 0">
-                        <app-icon name="bolt" [size]="15" />
-                        {{ seatingGenerated() ? 'Re-run allotment' : 'Run allotment' }}
-                      </button>
-                      <button class="btn btn-primary w-full mt-8" (click)="showPublishDialog.set(true)"
-                        [disabled]="actionLoading() || !seatingGenerated()">
-                        <app-icon name="send" [size]="15" /> Publish seating
-                      </button>
-                      @if (!seatingGenerated()) {
-                        <p class="allot-hint small">Publishing unlocks once seats have been allotted.</p>
-                      }
-                    } @else if (exam()!.status === 'published') {
-                      <p class="allot-hint small">
-                        Published. Students can look up their seat and invigilators can mark attendance.
-                      </p>
-                    }
                   </div>
-                </section>
-              </aside>
-            </div>
+                  <div class="rules">
+                    <div class="form-group" style="margin:0">
+                      <label class="form-label" for="mode">Placement</label>
+                      <select id="mode" class="form-control" [ngModel]="exam()!.shuffleMode" [disabled]="published() || busy()" (ngModelChange)="setMode($event)">
+                        <option value="sequential">Keep upload order</option>
+                        <option value="random">Shuffle everyone</option>
+                        <option value="department">Mix departments on each bench</option>
+                      </select>
+                    </div>
+                    <label class="gap-toggle">
+                      <input type="checkbox" [ngModel]="exam()!.spacing" [disabled]="published() || busy()" (ngModelChange)="setSpacing($event)" />
+                      Leave a gap seat between students
+                    </label>
+                  </div>
+
+                  @if (pickedRooms().length === 0) {
+                    <div class="fit warn"><app-icon name="alert" [size]="15" /> Pick at least one hall.</div>
+                  } @else if (capacityShort()) {
+                    <div class="fit bad"><app-icon name="alert" [size]="15" /> {{ capacity() }} seats for {{ students().length }} students — short by {{ students().length - capacity() }}. Add halls or turn off the gap seat.</div>
+                  } @else {
+                    <div class="fit"><app-icon name="check-circle" [size]="15" /> {{ capacity() }} seats{{ students().length ? ' for ' + students().length + ' students — fits' : '' }}.</div>
+                  }
+
+                  @if (!published()) {
+                    <div class="row-actions">
+                      <button class="btn btn-primary" (click)="runSeating()"
+                        [disabled]="busy() || students().length === 0 || pickedRooms().length === 0 || capacityShort()">
+                        <app-icon name="bolt" [size]="15" /> {{ seatingGenerated() ? 'Run seating again' : 'Run seating' }}
+                      </button>
+                      @if (seatingGenerated()) {
+                        <a [routerLink]="['/admin/exams', examId, 'seating']" class="btn btn-outline"><app-icon name="seat" [size]="15" /> View hall plan</a>
+                      }
+                    </div>
+                    @if (students().length === 0) { <p class="note">Upload students first.</p> }
+                    @if (dirty()) { <p class="note text-warning">Settings changed since the last run — run seating again before publishing.</p> }
+                  } @else {
+                    <div class="row-actions">
+                      <a [routerLink]="['/admin/exams', examId, 'seating']" class="btn btn-outline"><app-icon name="seat" [size]="15" /> View hall plan</a>
+                    </div>
+                    <p class="note">Locked while published. Unpublish to change halls or seating.</p>
+                  }
+
+                  @if (seatingGenerated()) {
+                    <ul class="hall-list" style="margin-top:14px">
+                      @for (row of allotmentByRoom(); track row.roomId) {
+                        <li><span class="hl-name">{{ row.roomName }}</span><span class="hl-floor">{{ row.floor }}</span><span class="hl-count mono">{{ row.count }}</span></li>
+                      }
+                    </ul>
+                  }
+                }
+              </div>
+            </section>
+
+            <!-- 3 · Publish -->
+            <section class="card panel step-card">
+              <header class="panel-head">
+                <div>
+                  <h2 class="panel-title"><span class="step-num" [class.done]="published()">3</span>Publish</h2>
+                  <span class="panel-sub">Makes seats searchable by hall ticket.</span>
+                </div>
+              </header>
+              <div class="panel-body">
+                @if (published()) {
+                  <div class="live">
+                    <app-icon name="check-circle" [size]="16" /> Live — students can find their seats.
+                    <a [routerLink]="['/exam', examId]" target="_blank" class="btn btn-outline btn-sm"><app-icon name="eye" [size]="14" /> Public view</a>
+                    <button class="btn btn-outline btn-sm" (click)="dialog.set('unpublish')" [disabled]="busy()">Unpublish</button>
+                  </div>
+                } @else {
+                  <button class="btn btn-primary" (click)="dialog.set('publish')" [disabled]="busy() || !canPublish()">
+                    <app-icon name="send" [size]="15" /> Publish seating
+                  </button>
+                  @if (!seatingGenerated()) { <p class="note">Run the seating first.</p> }
+                  @else if (unseatedCount() > 0) { <p class="note text-danger">{{ unseatedCount() }} students have no seat. Add halls and run seating again.</p> }
+                  @else if (dirty()) { <p class="note text-warning">Settings changed — run seating again.</p> }
+                }
+              </div>
+            </section>
+
+            <!-- Invigilators (optional) -->
+            <section class="card panel step-card">
+              <header class="panel-head">
+                <div>
+                  <h2 class="panel-title">Invigilators <span class="text-muted" style="font-weight:400;font-size:0.8rem">· optional</span></h2>
+                  <span class="panel-sub">Spread by workload and department; nobody is booked twice at the same time.</span>
+                </div>
+                <div class="panel-actions">
+                  @if (teachers().length === 0) {
+                    <a routerLink="/admin/teachers" class="btn btn-outline btn-sm"><app-icon name="badge" [size]="14" /> Add staff</a>
+                  } @else if (dutyRooms().length) {
+                    <input class="form-control" style="width:64px;height:32px" type="number" min="1" max="5" aria-label="Invigilators per hall"
+                      [ngModel]="exam()!.teachersPerRoom" (ngModelChange)="setPerRoom($event)" />
+                    <span class="text-muted" style="align-self:center;font-size:0.78rem">per hall</span>
+                    @if (hasInvigilators()) { <button class="btn btn-ghost btn-sm" (click)="clearInvigilators()" [disabled]="busy()">Clear</button> }
+                    <button class="btn btn-outline btn-sm" (click)="autoAllot()" [disabled]="busy()">
+                      <app-icon name="shuffle" [size]="14" /> {{ hasInvigilators() ? 'Re-allot' : 'Auto-allot' }}
+                    </button>
+                  }
+                </div>
+              </header>
+              @if (dutyRooms().length === 0) {
+                <div class="panel-body"><p class="text-muted">Pick halls above first.</p></div>
+              } @else {
+                <div class="table-wrapper">
+                  <table>
+                    <thead><tr><th>Hall</th><th>Invigilator(s)</th>@if (published()) { <th>Attendance</th><th></th> }</tr></thead>
+                    <tbody>
+                      @for (row of dutyRows(); track row.room.id) {
+                        <tr>
+                          <td><strong>{{ row.room.name }}</strong></td>
+                          <td>
+                            <div class="chips">
+                              @for (t of row.teachers; track t.id) {
+                                <span class="chip">{{ t.name }}<button class="x" type="button" [attr.aria-label]="'Remove ' + t.name" (click)="removeTeacher(row.room.id, t.id)">×</button></span>
+                              }
+                              @if (teachers().length) {
+                                <select class="add-sel" aria-label="Add invigilator" (change)="addTeacher(row.room.id, $any($event.target).value); $any($event.target).value = ''">
+                                  <option value="">+ Add</option>
+                                  @for (t of availableFor(row.room.id); track t.id) { <option [value]="t.id">{{ t.name }}{{ t.department ? ' · ' + t.department : '' }}</option> }
+                                </select>
+                              }
+                            </div>
+                          </td>
+                          @if (published()) {
+                            <td>
+                              @if (row.sheet?.submitted) { <span class="badge badge-green">Submitted · {{ row.sheet!.absentHallTickets.length }} absent</span> }
+                              @else { <span class="badge badge-amber">Pending</span> }
+                            </td>
+                            <td class="text-right">
+                              @if (row.sheet) {
+                                <button class="btn btn-outline btn-sm" (click)="copyLink(row.sheet)"><app-icon name="clipboard" [size]="13" /> Copy link</button>
+                                <a class="btn btn-ghost btn-sm" [href]="linkOf(row.sheet)" target="_blank">Open</a>
+                              }
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                @if (published()) {
+                  <div class="panel-foot">
+                    <span class="text-muted">Send each invigilator their hall's link — they mark absentees on their phone, no login. {{ submittedCount() }} / {{ sheets().length }} submitted.</span>
+                    <button class="btn btn-ghost btn-sm" (click)="refreshSheets()">Refresh</button>
+                  </div>
+                } @else {
+                  <div class="panel-foot"><span class="text-muted">Attendance links are created when you publish.</span></div>
+                }
+              }
+            </section>
           </div>
         }
       </main>
@@ -383,6 +375,30 @@ interface Stage { key: string; label: string; state: 'done' | 'active' | 'todo';
     .hl-name { font-weight: 500; }
     .hl-floor { flex: 1; font-size: 0.7rem; color: var(--text-muted); }
     .hl-count { color: var(--accent-blue); font-weight: 500; }
+
+    .step-card { margin-bottom: 16px; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-right: 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: var(--ink-face); color: var(--ink-text); }
+    .step-num.done { background: var(--accent-green); }
+    .panel-body { padding: 16px 18px; }
+    .hall-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .hall-opt { display: flex; align-items: center; gap: 10px; padding: 8px 11px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.88rem; }
+    .hall-opt.on { border-color: var(--accent-blue); background: color-mix(in oklch, var(--accent-blue) 7%, transparent); }
+    .hall-opt input { accent-color: var(--accent-blue); width: 16px; height: 16px; }
+    .hall-opt .grow { flex: 1; }
+    .hall-opt small { color: var(--text-muted); }
+    .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 12px; }
+    @media (max-width: 620px) { .rules { grid-template-columns: 1fr; } }
+    .gap-toggle { display: flex; align-items: center; gap: 9px; font-size: 0.88rem; padding-bottom: 9px; }
+    .gap-toggle input { accent-color: var(--accent-blue); width: 16px; height: 16px; }
+    .fit { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 0.84rem; margin-bottom: 14px; color: var(--accent-green); background: color-mix(in oklch, var(--accent-green) 9%, transparent); }
+    .fit.bad { color: var(--accent-red); background: color-mix(in oklch, var(--accent-red) 9%, transparent); }
+    .fit.warn { color: var(--accent-amber, #b45309); background: color-mix(in oklch, #f59e0b 12%, transparent); }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .note { font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+    .chip .x { background: none; border: 0; padding: 0 0 0 3px; cursor: pointer; color: var(--text-muted); font-size: 0.95rem; line-height: 1; }
+    .chip .x:hover { color: var(--accent-red); }
+    .add-sel { font-size: 0.78rem; padding: 3px 6px; border: 1px dashed var(--border-strong); border-radius: 3px; background: none; color: var(--text-secondary); max-width: 150px; }
+    .live { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 14px; border-radius: var(--radius-sm); background: color-mix(in oklch, var(--accent-green) 9%, transparent); font-size: 0.86rem; }
   `]
 })
 export class ExamDetailComponent implements OnInit {
@@ -393,267 +409,283 @@ export class ExamDetailComponent implements OnInit {
   private toastService = inject(ToastService);
   private fileUploadService = inject(FileUploadService);
   private teacherService = inject(TeacherService);
-  private dutyService = inject(DutyService);
-  private collegeService = inject(CollegeService);
+  private attendance = inject(AttendanceService);
   private router = inject(Router);
 
   examId = '';
-  collegeName = '';
-  submittedDuties = signal<Duty[]>([]);
   loading = signal(true);
-  actionLoading = signal(false);
+  busy = signal(false);
+  dialog = signal<DialogKind>('');
   exam = signal<Exam | null>(null);
   students = signal<Student[]>([]);
   rooms = signal<Room[]>([]);
   teachers = signal<Teacher[]>([]);
+  sheets = signal<Attendance[]>([]);
   showAll = signal(false);
-  showPublishDialog = signal(false);
-  showArchiveDialog = signal(false);
-  showDeleteDialog = signal(false);
+  dirty = signal(false);               // settings changed after seating was last run
+  formatFloor = formatFloor;
 
+  published = () => this.exam()?.status === 'published';
   seatingGenerated = () => this.students().some(s => s.isSeated);
   seatedCount = () => this.students().filter(s => s.isSeated).length;
   unseatedCount = () => (this.seatingGenerated() ? this.students().length - this.seatedCount() : 0);
-  getRoomName = (roomId?: string) => this.rooms().find(r => r.id === roomId)?.name ?? roomId ?? '—';
+  canPublish = () => this.seatingGenerated() && this.unseatedCount() === 0 && !this.dirty();
+  roomName = (id?: string) => this.rooms().find(r => r.id === id)?.name ?? '—';
   visibleStudents = () => (this.showAll() ? this.students() : this.students().slice(0, 25));
 
-  examRooms = (): Room[] => {
-    const e = this.exam();
-    if (!e) return [];
-    const all = this.rooms();
-    return e.selectedRooms.length ? all.filter(r => e.selectedRooms.includes(r.id)) : all;
+  pickedRooms = (): Room[] => {
+    const ids = this.exam()?.selectedRooms ?? [];
+    return this.rooms().filter(r => ids.includes(r.id));
   };
-  capacity = () => this.seatingService.capacityOf(this.examRooms(), this.exam()?.spacing ?? false);
+  isPicked = (id: string) => (this.exam()?.selectedRooms ?? []).includes(id);
+  seatsIn = (r: Room) => roomCapacity(r.columnLayout, r.seatsPerBench, this.exam()?.spacing ?? false);
+  capacity = () => this.seatingService.capacityOf(this.pickedRooms(), this.exam()?.spacing ?? false);
   capacityShort = () => this.students().length > 0 && this.capacity() < this.students().length;
 
-  modeHint = () => ({
-    sequential: 'Candidates keep their uploaded order.',
-    random: 'Candidates are shuffled before allotment.',
-    department: 'Bench-mates are drawn from different departments.'
-  }[this.exam()?.shuffleMode ?? 'sequential']);
+  absentSet = () => new Set(this.sheets().flatMap(s => s.absentHallTickets));
+  submittedCount = () => this.sheets().filter(s => s.submitted).length;
 
   allotmentByRoom = () => {
     const counts = new Map<string, number>();
-    for (const s of this.students()) {
-      if (!s.isSeated || !s.assignedRoom) continue;
-      counts.set(s.assignedRoom, (counts.get(s.assignedRoom) ?? 0) + 1);
-    }
+    for (const s of this.students()) if (s.isSeated && s.assignedRoom) counts.set(s.assignedRoom, (counts.get(s.assignedRoom) ?? 0) + 1);
     return [...counts.entries()].map(([roomId, count]) => {
       const room = this.rooms().find(r => r.id === roomId);
       return { roomId, roomName: room?.name ?? roomId, floor: formatFloor(room?.floor ?? ''), count };
     }).sort((a, b) => a.roomName.localeCompare(b.roomName, undefined, { numeric: true }));
   };
 
-  stages = (): Stage[] => {
-    const e = this.exam()!;
+  stages = () => {
     const roster = this.students().length > 0;
-    const seated = this.seatingGenerated();
-    const staffed = this.hasInvigilators();
-    const published = e.status === 'published' || e.status === 'archived';
-    const state = (done: boolean, active: boolean): Stage['state'] => done ? 'done' : active ? 'active' : 'todo';
+    const seated = this.seatingGenerated() && !this.dirty();
+    const pub = this.published();
     return [
-      { key: 'roster', label: 'Roster', state: state(roster, !roster), note: roster ? `${this.students().length} candidates` : 'Upload the candidate list' },
-      { key: 'allot', label: 'Allotment', state: state(seated, roster && !seated), note: seated ? `${this.seatedCount()} seated` : 'Not yet run' },
-      { key: 'duty', label: 'Invigilators', state: state(staffed, seated && !staffed), note: staffed ? `${this.assignedInvigilatorCount()} on duty` : 'No roster' },
-      { key: 'publish', label: 'Publication', state: state(published, seated && !published), note: published ? e.status : 'Not published' }
+      { label: 'Students', done: roster, active: !roster, note: roster ? `${this.students().length} candidates` : 'Upload the list' },
+      { label: 'Halls & seating', done: seated, active: roster && !seated, note: seated ? `${this.seatedCount()} seated` : 'Pick halls, run seating' },
+      { label: 'Publish', done: pub, active: seated && !pub, note: pub ? 'Live' : 'Not published' }
     ];
   };
 
+  // ── invigilators ──
+  dutyRooms = (): Room[] => {
+    if (this.seatingGenerated()) {
+      const ids = new Set(this.students().filter(s => s.isSeated).map(s => s.assignedRoom));
+      return this.rooms().filter(r => ids.has(r.id));
+    }
+    return this.pickedRooms();
+  };
   hasInvigilators = () => Object.values(this.exam()?.invigilators ?? {}).some(ids => ids.length > 0);
-  assignedInvigilatorCount = () => Object.values(this.exam()?.invigilators ?? {}).reduce((n, ids) => n + ids.length, 0);
-  private teacherById = (id: string) => this.teachers().find(t => t.id === id);
-  invigilatorRoster = (): { roomId: string; roomName: string; teachers: Teacher[] }[] => {
+  dutyRows = () => {
     const inv = this.exam()?.invigilators ?? {};
-    return this.examRooms().map(r => ({
-      roomId: r.id,
-      roomName: r.name,
-      teachers: (inv[r.id] ?? []).map(id => this.teacherById(id)).filter((t): t is Teacher => !!t)
+    return this.dutyRooms().map(room => ({
+      room,
+      teachers: (inv[room.id] ?? []).map(id => this.teachers().find(t => t.id === id)).filter((t): t is Teacher => !!t),
+      sheet: this.sheets().find(s => s.roomId === room.id) ?? null
     }));
+  };
+  availableFor = (roomId: string) => {
+    const inv = this.exam()?.invigilators ?? {};
+    const taken = new Set(Object.values(inv).flat());
+    return this.teachers().filter(t => t.isActive && !taken.has(t.id) && !(inv[roomId] ?? []).includes(t.id));
   };
 
   async ngOnInit() {
     this.examId = this.route.snapshot.paramMap.get('id')!;
     try {
-      const [exam, students, rooms, teachers, college, duties] = await Promise.all([
+      const [exam, students, rooms, teachers, sheets] = await Promise.all([
         this.examService.getExam(this.examId),
         this.examService.getStudents(this.examId),
         firstValueFrom(this.roomService.getRooms()),
         firstValueFrom(this.teacherService.getTeachers()),
-        this.collegeService.getMyCollege().catch(() => null),
-        this.dutyService.getDutiesForExam(this.examId).catch(() => [])
+        this.attendance.forExam(this.examId).catch(() => [])
       ]);
       this.exam.set(exam);
       this.students.set(students);
       this.rooms.set(rooms ?? []);
       this.teachers.set(teachers ?? []);
-      this.collegeName = college?.name ?? '';
-      this.submittedDuties.set(duties);
+      this.sheets.set(sheets);
+      // A saved allotment that no longer matches the chosen halls is stale.
+      if (exam && students.some(s => s.isSeated)) {
+        const picked = new Set(exam.selectedRooms);
+        this.dirty.set(students.some(s => s.isSeated && !picked.has(s.assignedRoom ?? '')));
+      }
     } finally { this.loading.set(false); }
   }
 
-  async generateSeating() {
+  // ── setup (saved as you click) ──
+  private async patch(change: Partial<Exam>) {
     const exam = this.exam();
     if (!exam) return;
-    if (this.students().length === 0) { this.toastService.error('Upload the roster first.'); return; }
-
-    const selectedRooms = this.examRooms();
-    if (selectedRooms.length === 0) { this.toastService.error('No halls available. Add halls first.'); return; }
-
-    this.actionLoading.set(true);
-    try {
-      // A hall already allotted to another examination at an overlapping time
-      // cannot be allotted again.
-      const conflicts = await this.examService.getRoomConflicts(
-        this.examId, selectedRooms.map(r => r.id), exam.date, exam.startTime, exam.endTime
-      );
-      if (conflicts.length) {
-        const names = [...new Set(conflicts.map(c => c.roomName))].join(', ');
-        this.toastService.error(`Cannot allot — ${names} clashes with "${conflicts[0].examName}" at ${conflicts[0].time}.`);
-        return;
-      }
-
-      const assigned = this.seatingService.assignSeats(this.students(), selectedRooms, { mode: exam.shuffleMode, spacing: exam.spacing });
-      await this.examService.saveAssignedStudents(this.examId, assigned);
-      this.students.set(assigned);
-      this.toastService.success(`Allotted ${assigned.filter(s => s.isSeated).length} seats across ${this.allotmentByRoom().length} halls.`);
-    } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Allotment failed.');
-    } finally { this.actionLoading.set(false); }
+    this.exam.set({ ...exam, ...change });
+    if (this.seatingGenerated()) this.dirty.set(true);
+    try { await this.examService.updateExam(this.examId, change); }
+    catch (e: any) { this.exam.set(exam); this.toastService.error(e?.message ?? 'Could not save.'); }
+  }
+  toggleRoom(id: string) {
+    const cur = this.exam()?.selectedRooms ?? [];
+    this.patch({ selectedRooms: cur.includes(id) ? cur.filter(r => r !== id) : [...cur, id] });
+  }
+  setMode(mode: ShuffleMode) { this.patch({ shuffleMode: mode }); }
+  setSpacing(on: boolean) { this.patch({ spacing: !!on }); }
+  async setPerRoom(n: number) {
+    const exam = this.exam();
+    if (!exam) return;
+    const v = Math.min(5, Math.max(1, Math.trunc(Number(n) || 1)));
+    this.exam.set({ ...exam, teachersPerRoom: v });
+    await this.examService.updateExam(this.examId, { teachersPerRoom: v }).catch(() => {});
   }
 
-  async publishExam() {
-    this.showPublishDialog.set(false);
-    this.actionLoading.set(true);
+  // ── students ──
+  private fileInput() { return document.querySelector<HTMLInputElement>('input[type=file][hidden]'); }
+  askUpload() { if (this.seatingGenerated()) this.dialog.set('replace'); else this.pickFile(); }
+  pickFile() { this.dialog.set(''); this.fileInput()?.click(); }
+
+  async onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.busy.set(true);
+    try {
+      const students = await this.fileUploadService.parseFile(file);
+      await this.examService.saveStudents(this.examId, students);
+      this.students.set(students);
+      this.dirty.set(false);
+      this.showAll.set(false);
+      this.toastService.success(`${students.length} students loaded.`);
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Could not read that file.');
+    } finally { input.value = ''; this.busy.set(false); }
+  }
+
+  // ── seating ──
+  async runSeating() {
+    const exam = this.exam();
+    if (!exam) return;
+    this.busy.set(true);
+    try {
+      const assigned = this.seatingService.assignSeats(this.students(), this.pickedRooms(), { mode: exam.shuffleMode, spacing: exam.spacing });
+      // Only halls that actually receive students can clash with another exam.
+      const used = [...new Set(assigned.filter(s => s.isSeated).map(s => s.assignedRoom!))];
+      const conflicts = await this.examService.getRoomConflicts(this.examId, used, exam.date, exam.startTime, exam.endTime);
+      if (conflicts.length) {
+        const names = [...new Set(conflicts.map(c => c.roomName))].join(', ');
+        this.toastService.error(`${names} already used by "${conflicts[0].examName}" at ${conflicts[0].time}. Pick other halls.`);
+        return;
+      }
+      await this.examService.saveAssignedStudents(this.examId, assigned);
+      this.students.set(assigned);
+      this.dirty.set(false);
+      // Invigilators for halls that are no longer used no longer apply.
+      const inv: Record<string, string[]> = {};
+      for (const [rid, ids] of Object.entries(exam.invigilators ?? {})) if (used.includes(rid)) inv[rid] = ids;
+      if (Object.keys(inv).length !== Object.keys(exam.invigilators ?? {}).length) {
+        this.exam.set({ ...exam, invigilators: inv });
+        await this.examService.saveInvigilators(this.examId, inv, exam.teachersPerRoom);
+      }
+      this.toastService.success(`Seated ${used.length ? assigned.filter(s => s.isSeated).length : 0} students across ${used.length} hall(s).`);
+    } catch (e: any) {
+      this.toastService.error(e?.message ?? 'Seating failed.');
+    } finally { this.busy.set(false); }
+  }
+
+  // ── publish ──
+  async publish() {
+    this.dialog.set('');
+    this.busy.set(true);
     try {
       await this.examService.publishExam(this.examId);
       this.exam.update(e => e ? { ...e, status: 'published' } : e);
-      this.toastService.success('Published. Students can now look up their seats.');
+      await this.refreshSheets();
+      this.toastService.success('Published. Copy each hall\'s link to its invigilator.');
     } catch (e: any) {
       this.toastService.error(e?.message ?? 'Publishing failed.');
-    } finally { this.actionLoading.set(false); }
+    } finally { this.busy.set(false); }
   }
 
-  async archiveExam() {
-    this.showArchiveDialog.set(false);
-    this.actionLoading.set(true);
+  async unpublish() {
+    this.dialog.set('');
+    this.busy.set(true);
     try {
-      await this.examService.archiveExam(this.examId);
-      this.exam.update(e => e ? { ...e, status: 'archived' } : e);
-      this.toastService.success('Archived — withdrawn from the public lookup.');
+      await this.examService.unpublishExam(this.examId);
+      this.exam.update(e => e ? { ...e, status: 'draft' } : e);
+      this.sheets.set([]);
+      this.toastService.success('Unpublished. You can edit and publish again.');
     } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not archive.');
-    } finally { this.actionLoading.set(false); }
-  }
-
-  async allotInvigilators() {
-    const exam = this.exam();
-    if (!exam) return;
-    if (this.teachers().filter(t => t.isActive).length === 0) {
-      this.toastService.error('No staff are available for duty.'); return;
-    }
-    const roomObjs = this.examRooms();
-    if (roomObjs.length === 0) { this.toastService.error('This examination has no halls selected.'); return; }
-
-    this.actionLoading.set(true);
-    try {
-      const [busy, dutyCounts] = await Promise.all([
-        this.examService.getBusyTeachers(this.examId, exam.date, exam.startTime, exam.endTime),
-        this.examService.getDutyCounts(this.examId)
-      ]);
-      const res = this.teacherService.allot({
-        roomIds: roomObjs.map(r => r.id),
-        teachersPerRoom: exam.teachersPerRoom,
-        teachers: this.teachers(),
-        busyTeacherIds: busy,
-        examDepartment: exam.department,
-        dutyCounts
-      });
-      await this.examService.saveInvigilators(this.examId, res.allotment, exam.teachersPerRoom);
-      const updated = { ...exam, invigilators: res.allotment };
-      this.exam.set(updated);
-      // Publish teacher-readable duty documents for the invigilator portal.
-      const teachersById = new Map(this.teachers().map(t => [t.id, t]));
-      const roomNames = new Map(this.rooms().map(r => [r.id, r.name]));
-      await this.dutyService.publishDuties(updated, teachersById, roomNames, this.collegeName).catch(() => {});
-      this.submittedDuties.set(await this.dutyService.getDutiesForExam(this.examId).catch(() => []));
-      if (res.shortBy > 0) {
-        this.toastService.error(`Allotted ${res.assignedCount} — ${res.shortBy} more invigilator(s) needed; some halls are unstaffed.`);
-      } else {
-        this.toastService.success(`Duty rostered across ${roomObjs.length} hall(s).`);
-      }
-    } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not roster invigilators.');
-    } finally { this.actionLoading.set(false); }
-  }
-
-  async clearInvigilators() {
-    const exam = this.exam();
-    if (!exam) return;
-    this.actionLoading.set(true);
-    try {
-      await this.examService.saveInvigilators(this.examId, {}, exam.teachersPerRoom);
-      await this.dutyService.clearDuties(this.examId).catch(() => {});
-      this.exam.update(e => e ? { ...e, invigilators: {} } : e);
-      this.submittedDuties.set([]);
-      this.toastService.success('Duty roster cleared.');
-    } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not clear the roster.');
-    } finally { this.actionLoading.set(false); }
-  }
-
-  submittedCount = () => this.submittedDuties().filter(d => d.submitted).length;
-  hasSubmissions = () => this.submittedCount() > 0;
-
-  async applySubmittedAttendance() {
-    this.actionLoading.set(true);
-    try {
-      const duties = await this.dutyService.getDutiesForExam(this.examId);
-      const absent = new Set<string>();
-      for (const d of duties) for (const ht of d.absentHallTickets ?? []) absent.add(ht);
-      const updates = this.students().filter(s => s.isSeated)
-        .map(s => ({ hallTicketNo: s.hallTicketNo, absent: absent.has(s.hallTicketNo) }));
-      await this.examService.saveAttendance(this.examId, updates);
-      this.students.update(list => list.map(s => s.isSeated ? { ...s, absent: absent.has(s.hallTicketNo) } : s));
-      this.submittedDuties.set(duties);
-      this.toastService.success(`Applied invigilator attendance · ${absent.size} absent.`);
-    } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not apply attendance.');
-    } finally { this.actionLoading.set(false); }
+      this.toastService.error(e?.message ?? 'Could not unpublish.');
+    } finally { this.busy.set(false); }
   }
 
   async deleteExam() {
-    this.showDeleteDialog.set(false);
-    this.actionLoading.set(true);
+    this.dialog.set('');
+    this.busy.set(true);
     try {
       await this.examService.deleteExam(this.examId);
       this.toastService.success('Examination deleted.');
       this.router.navigate(['/admin/exams']);
     } catch (e: any) {
       this.toastService.error(e?.message ?? 'Could not delete.');
-      this.actionLoading.set(false);
+      this.busy.set(false);
     }
   }
 
-  async onFileChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    this.actionLoading.set(true);
+  // ── invigilators ──
+  private async saveInv(next: Record<string, string[]>) {
+    const exam = this.exam()!;
+    this.exam.set({ ...exam, invigilators: next });
+    await this.examService.saveInvigilators(this.examId, next, exam.teachersPerRoom);
+    if (this.published()) {
+      await this.examService.syncAttendance({ ...exam, invigilators: next });   // keeps links and marks
+      await this.refreshSheets();
+    }
+  }
+
+  async autoAllot() {
+    const exam = this.exam();
+    if (!exam) return;
+    if (this.teachers().filter(t => t.isActive).length === 0) { this.toastService.error('No staff available.'); return; }
+    this.busy.set(true);
     try {
-      const students = await this.fileUploadService.parseFile(file);
-      await this.examService.saveStudents(this.examId, students);
-      this.students.set(students);
-      this.showAll.set(false);
-      this.toastService.success(`${students.length} candidates loaded. Run the allotment next.`);
+      const [busy, counts] = await Promise.all([
+        this.examService.getBusyTeachers(this.examId, exam.date, exam.startTime, exam.endTime),
+        this.examService.getDutyCounts(this.examId)
+      ]);
+      const res = this.teacherService.allot({
+        roomIds: this.dutyRooms().map(r => r.id), teachersPerRoom: exam.teachersPerRoom,
+        teachers: this.teachers(), busyTeacherIds: busy, examDepartment: exam.department, dutyCounts: counts
+      });
+      await this.saveInv(res.allotment);
+      if (res.shortBy > 0) this.toastService.error(`${res.shortBy} more invigilator(s) needed — some halls are short.`);
+      else this.toastService.success('Invigilators allotted.');
     } catch (e: any) {
-      this.toastService.error(e?.message ?? 'Could not read that file.');
-    } finally {
-      input.value = '';           // allow re-selecting the same file
-      this.actionLoading.set(false);
-    }
+      this.toastService.error(e?.message ?? 'Could not allot invigilators.');
+    } finally { this.busy.set(false); }
   }
 
-  statusBadge(s: string): string {
-    return s === 'published' ? 'badge-green' : s === 'archived' ? 'badge-gray' : 'badge-amber';
+  async clearInvigilators() {
+    this.busy.set(true);
+    try { await this.saveInv({}); this.toastService.success('Cleared.'); }
+    catch (e: any) { this.toastService.error(e?.message ?? 'Could not clear.'); }
+    finally { this.busy.set(false); }
+  }
+
+  async addTeacher(roomId: string, teacherId: string) {
+    if (!teacherId) return;
+    const inv = { ...(this.exam()?.invigilators ?? {}) };
+    inv[roomId] = [...(inv[roomId] ?? []), teacherId];
+    try { await this.saveInv(inv); } catch (e: any) { this.toastService.error(e?.message ?? 'Could not add.'); }
+  }
+
+  async removeTeacher(roomId: string, teacherId: string) {
+    const inv = { ...(this.exam()?.invigilators ?? {}) };
+    inv[roomId] = (inv[roomId] ?? []).filter(id => id !== teacherId);
+    try { await this.saveInv(inv); } catch (e: any) { this.toastService.error(e?.message ?? 'Could not remove.'); }
+  }
+
+  // ── attendance links ──
+  linkOf = (a: Attendance) => this.attendance.linkFor(a);
+  async refreshSheets() { this.sheets.set(await this.attendance.forExam(this.examId).catch(() => [])); }
+  async copyLink(a: Attendance) {
+    const link = this.linkOf(a);
+    try { await navigator.clipboard.writeText(link); this.toastService.success(`Link for ${a.roomName} copied.`); }
+    catch { window.prompt('Copy this link:', link); }
   }
 }

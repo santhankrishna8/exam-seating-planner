@@ -38,7 +38,7 @@ type Filter = '' | ExamStatus;
             <div class="card empty-state">
               <div class="empty-state-icon"><app-icon name="document" [size]="26" /></div>
               <h3>The register is empty</h3>
-              <p>Create an examination to allot halls, roster invigilators and publish seating.</p>
+              <p>Create an examination to seat students and publish the plan.</p>
               <a routerLink="/admin/exams/new" class="btn btn-primary mt-16">Create examination</a>
             </div>
           } @else {
@@ -152,8 +152,7 @@ export class ExamListComponent implements OnInit {
   filters: { value: Filter; label: string }[] = [
     { value: '', label: 'All' },
     { value: 'draft', label: 'Draft' },
-    { value: 'published', label: 'Published' },
-    { value: 'archived', label: 'Archived' }
+    { value: 'published', label: 'Published' }
   ];
 
   count = (status: ExamStatus) => this.exams().filter(e => e.status === status).length;
@@ -185,6 +184,6 @@ export class ExamListComponent implements OnInit {
   }
 
   statusBadge(s: string): string {
-    return s === 'published' ? 'badge-green' : s === 'archived' ? 'badge-gray' : 'badge-amber';
+    return s === 'published' ? 'badge-green' : 'badge-amber';
   }
 }

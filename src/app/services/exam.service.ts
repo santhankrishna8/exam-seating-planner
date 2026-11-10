@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  Firestore, collection, collectionGroup, query, where, doc, addDoc, updateDoc, deleteDoc,
   getDoc, getDocs, serverTimestamp, writeBatch, Timestamp, WriteBatch
 } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
@@ -9,6 +9,7 @@ import { Student, PublicSeat } from '../models/student.model';
 import { Observable, from, map, firstValueFrom } from 'rxjs';
 import { CollegeService } from './college.service';
 import { RoomService } from './room.service';
+import { AttendanceService } from './attendance.service';
 import { normalizeHallTicket } from '../utils/hall-ticket';
 
 export interface PublicExamMeta {
@@ -53,6 +54,7 @@ export class ExamService {
   private auth = inject(AuthService);
   private collegeService = inject(CollegeService);
   private roomService = inject(RoomService);
+  private attendance = inject(AttendanceService);
 
   private examsCol() {
     return collection(this.firestore, `colleges/${this.auth.currentUid!}/exams`);
@@ -79,7 +81,7 @@ export class ExamService {
       date: d['date'] instanceof Timestamp ? d['date'].toDate() : new Date(d['date']),
       startTime: d['startTime'],
       endTime: d['endTime'],
-      status: d['status'] ?? 'draft',
+      status: d['status'] === 'published' ? 'published' : 'draft',
       shuffleMode: d['shuffleMode'] ?? 'sequential',
       spacing: d['spacing'] ?? false,
       selectedRooms: d['selectedRooms'] ?? [],
@@ -99,7 +101,7 @@ export class ExamService {
   }
 
   /**
-   * Finds rooms that another non-archived exam has already booked at an
+   * Finds rooms that another exam has already booked at an
    * overlapping date + time. Used to block double-allotment of a hall.
    * `roomIds` is the resolved set this exam intends to use.
    */
@@ -121,7 +123,7 @@ export class ExamService {
     const seen = new Set<string>();
 
     for (const other of allExams) {
-      if (other.id === examId || other.status === 'archived') continue;
+      if (other.id === examId) continue;
       if (onlyPublished && other.status !== 'published') continue;
       if (!sameDay(other.date, date)) continue;
       if (!timesOverlap(startTime, endTime, other.startTime, other.endTime)) continue;
@@ -149,7 +151,7 @@ export class ExamService {
     const allExams = await firstValueFrom(this.getExams());
     const busy = new Set<string>();
     for (const other of allExams) {
-      if (other.id === examId || other.status === 'archived') continue;
+      if (other.id === examId) continue;
       if (!sameDay(other.date, date)) continue;
       if (!timesOverlap(startTime, endTime, other.startTime, other.endTime)) continue;
       for (const ids of Object.values(other.invigilators ?? {})) {
@@ -159,12 +161,12 @@ export class ExamService {
     return busy;
   }
 
-  /** Total invigilation duties already assigned per teacher across non-archived exams. */
+  /** Total invigilation duties already assigned per teacher across exams. */
   async getDutyCounts(excludeExamId?: string): Promise<Map<string, number>> {
     const allExams = await firstValueFrom(this.getExams());
     const counts = new Map<string, number>();
     for (const e of allExams) {
-      if (e.id === excludeExamId || e.status === 'archived') continue;
+      if (e.id === excludeExamId) continue;
       for (const ids of Object.values(e.invigilators ?? {})) {
         for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
       }
@@ -215,8 +217,7 @@ export class ExamService {
         name: s.name,
         department: s.department ?? '',
         section: s.section ?? '',
-        isSeated: false,
-        absent: false
+        isSeated: false
       });
     });
   }
@@ -237,25 +238,17 @@ export class ExamService {
         assignedRoom: s.isSeated ? (s.assignedRoom ?? '') : '',
         assignedBench: s.isSeated ? (s.assignedBench ?? 0) : 0,
         assignedSeat: s.isSeated ? (s.assignedSeat ?? 0) : 0,
-        isSeated: !!s.isSeated,
-        absent: s.absent ?? false
+        isSeated: !!s.isSeated
       });
     });
   }
 
-  /** Persist present/absent flags for seated students (chunked batches). */
-  async saveAttendance(examId: string, updates: { hallTicketNo: string; absent: boolean }[]): Promise<void> {
-    const uid = this.auth.currentUid!;
-    const CHUNK = 490;
-    for (let i = 0; i < updates.length; i += CHUNK) {
-      const batch = writeBatch(this.firestore);
-      for (const u of updates.slice(i, i + CHUNK)) {
-        batch.update(doc(this.firestore, `colleges/${uid}/exams/${examId}/students`, u.hallTicketNo), { absent: u.absent });
-      }
-      await batch.commit();
-    }
-  }
-
+  /**
+   * Publishes (or re-publishes) the seating. Order matters: the public record
+   * goes up as "pending" first (the seat rules need its owner), seats follow,
+   * and only then does it flip to "published" — so students never see a
+   * half-written exam.
+   */
   async publishExam(examId: string): Promise<void> {
     const uid = this.auth.currentUid;
     if (!uid) throw new Error('Not authenticated. Please log in again.');
@@ -263,41 +256,24 @@ export class ExamService {
     const exam = await this.getExam(examId);
     if (!exam) throw new Error('Exam not found.');
 
-    const allStudents = await this.getStudents(examId);
-    const students = allStudents.filter(s => s.isSeated && s.assignedRoom);
+    const students = (await this.getStudents(examId)).filter(s => s.isSeated && s.assignedRoom);
     if (students.length === 0) {
-      throw new Error('Nothing to publish — allot seating for this exam first.');
+      throw new Error('Nothing to publish — run the seating first.');
     }
 
-    // Re-check against already-published exams so two live exams never share a
-    // hall at an overlapping time, even if drafts were generated independently.
     const usedRooms = [...new Set(students.map(s => s.assignedRoom!))];
-    const conflicts = await this.getRoomConflicts(
-      examId, usedRooms.length ? usedRooms : exam.selectedRooms,
-      exam.date, exam.startTime, exam.endTime, true
-    );
+    const conflicts = await this.getRoomConflicts(examId, usedRooms, exam.date, exam.startTime, exam.endTime, true);
     if (conflicts.length) {
       const names = [...new Set(conflicts.map(c => c.roomName))].join(', ');
       throw new Error(`Can't publish — ${names} already booked by "${conflicts[0].examName}" at ${conflicts[0].time}.`);
     }
 
-    // College info is optional metadata — fetch it but don't fail if missing
     const college = await this.collegeService.getMyCollege().catch(() => null);
+    const rooms = await firstValueFrom(this.roomService.getRooms());
+    const roomInfo = new Map(rooms.map(r => [r.id, r]));
 
-    // Build room name lookup
-    const roomNames: Record<string, { name: string; floor: string; seatsPerBench: number }> = {};
-    const roomsSnap = await getDocs(collection(this.firestore, `colleges/${uid}/rooms`));
-    roomsSnap.docs.forEach(d => {
-      roomNames[d.id] = {
-        name: d.data()['name'] ?? '',
-        floor: d.data()['floor'] ?? '',
-        seatsPerBench: d.data()['seatsPerBench'] ?? 2
-      };
-    });
-
-    // Write public exam metadata
-    const metaBatch = writeBatch(this.firestore);
-    metaBatch.set(doc(this.firestore, 'publicExams', examId), {
+    const metaRef = doc(this.firestore, 'publicExams', examId);
+    const meta = {
       ownerUid: uid,
       collegeName: college?.name ?? '',
       collegeCode: college?.code ?? '',
@@ -305,19 +281,17 @@ export class ExamService {
       subjectCode: exam.subjectCode ?? '',
       date: exam.date,
       startTime: exam.startTime ?? '',
-      endTime: exam.endTime ?? '',
-      status: 'published'
-    });
-    await metaBatch.commit();
+      endTime: exam.endTime ?? ''
+    };
+    await writeBatch(this.firestore).set(metaRef, { ...meta, status: exam.status === 'published' ? 'published' : 'pending' }).commit();
 
-    // Re-publishing must not leave seats from an earlier allotment behind.
     const previous = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
     const keep = new Set(students.map(s => s.hallTicketNo));
     await this.inBatches(previous.docs.filter(d => !keep.has(d.id)), (batch, d) => batch.delete(d.ref));
-
     await this.inBatches(students, (batch, s) => {
-      const room = roomNames[s.assignedRoom!];
+      const room = roomInfo.get(s.assignedRoom!);
       batch.set(doc(this.firestore, `publicExams/${examId}/seats`, s.hallTicketNo), {
+        hallTicketNo: s.hallTicketNo,
         name: s.name,
         roomId: s.assignedRoom ?? '',
         roomName: room?.name ?? '',
@@ -328,40 +302,76 @@ export class ExamService {
       });
     });
 
-    // Mark exam as published in the college's own collection
+    await updateDoc(metaRef, { status: 'published' });
     await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'published' as ExamStatus });
+    await this.syncAttendance({ ...exam, status: 'published' }, usedRooms);
+  }
+
+  /** Keeps the invigilators' attendance links in step with the exam. */
+  async syncAttendance(exam: Exam, roomIds?: string[]): Promise<void> {
+    const uid = this.auth.currentUid!;
+    let ids = roomIds;
+    if (!ids) {
+      const seated = (await this.getStudents(exam.id)).filter(s => s.isSeated && s.assignedRoom);
+      ids = [...new Set(seated.map(s => s.assignedRoom!))];
+    }
+    const [rooms, teachersSnap, college] = await Promise.all([
+      firstValueFrom(this.roomService.getRooms()),
+      getDocs(collection(this.firestore, `colleges/${uid}/teachers`)),
+      this.collegeService.getMyCollege().catch(() => null)
+    ]);
+    await this.attendance.sync(
+      exam, ids,
+      new Map(rooms.map(r => [r.id, r.name])),
+      new Map(teachersSnap.docs.map(d => [d.id, (d.data()['name'] as string) ?? ''])),
+      college?.name ?? ''
+    );
+  }
+
+  private async deleteCollectionDocs(path: string) {
+    const snap = await getDocs(collection(this.firestore, path));
+    await this.inBatches(snap.docs, (batch, d) => batch.delete(d.ref));
+  }
+
+  /** Withdraws the exam from students and invigilators; the draft is kept. */
+  async unpublishExam(examId: string): Promise<void> {
+    const uid = this.auth.currentUid!;
+    await this.deleteCollectionDocs(`publicExams/${examId}/seats`);
+    await deleteDoc(doc(this.firestore, 'publicExams', examId)).catch(() => {});
+    await this.attendance.clear(examId).catch(() => {});
+    await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'draft' as ExamStatus });
   }
 
   /** Permanently removes an exam and everything published for it. */
   async deleteExam(examId: string): Promise<void> {
     const uid = this.auth.currentUid;
     if (!uid) throw new Error('Not authenticated. Please log in again.');
-
-    const deleteCollectionDocs = async (path: string) => {
-      const snap = await getDocs(collection(this.firestore, path));
-      for (let i = 0; i < snap.docs.length; i += 490) {
-        const batch = writeBatch(this.firestore);
-        for (const d of snap.docs.slice(i, i + 490)) batch.delete(d.ref);
-        await batch.commit();
-      }
-    };
-
-    // Public copy first (students may have it bookmarked), then private data.
-    await deleteCollectionDocs(`publicExams/${examId}/seats`);
+    await this.deleteCollectionDocs(`publicExams/${examId}/seats`);
     await deleteDoc(doc(this.firestore, 'publicExams', examId)).catch(() => {});
-    await deleteCollectionDocs(`colleges/${uid}/exams/${examId}/students`);
+    await this.attendance.clear(examId).catch(() => {});
+    await this.deleteCollectionDocs(`colleges/${uid}/exams/${examId}/students`);
     await deleteDoc(doc(this.firestore, `colleges/${uid}/exams`, examId));
   }
 
-  async archiveExam(examId: string): Promise<void> {
-    const uid = this.auth.currentUid!;
-    await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'archived' as ExamStatus });
-    // Hide from the public lookup too. The meta doc exists because archive is
-    // only offered for published exams; ignore if it was never published.
-    await updateDoc(doc(this.firestore, 'publicExams', examId), { status: 'archived' }).catch(() => {});
+  /** Drops a removed teacher from every exam roster so no duty points at nobody. */
+  async removeTeacherFromExams(teacherId: string): Promise<void> {
+    const exams = await firstValueFrom(this.getExams());
+    for (const e of exams) {
+      const inv = e.invigilators ?? {};
+      if (!Object.values(inv).some(ids => ids.includes(teacherId))) continue;
+      const next: Record<string, string[]> = {};
+      for (const [rid, ids] of Object.entries(inv)) next[rid] = ids.filter(i => i !== teacherId);
+      await this.saveInvigilators(e.id, next, e.teachersPerRoom);
+      if (e.status === 'published') await this.syncAttendance({ ...e, invigilators: next }).catch(() => {});
+    }
   }
 
-  /** Published seat documents are read in three places — map them in one. */
+  /** Exams (draft or published) that use a hall. */
+  async examsUsingRoom(roomId: string): Promise<Exam[]> {
+    const exams = await firstValueFrom(this.getExams());
+    return exams.filter(e => e.selectedRooms.includes(roomId));
+  }
+
   private mapSeat(hallTicketNo: string, d: any): PublicSeat {
     return {
       hallTicketNo,
@@ -375,50 +385,57 @@ export class ExamService {
     };
   }
 
+  private toDate(v: any): Date | null {
+    return v instanceof Timestamp ? v.toDate() : (v ? new Date(v) : null);
+  }
+
   async getPublicSeat(examId: string, hallTicketNo: string): Promise<PublicSeat | null> {
     const key = normalizeHallTicket(hallTicketNo);
     const snap = await getDoc(doc(this.firestore, `publicExams/${examId}/seats`, key));
-    if (!snap.exists()) return null;
-    const d = snap.data() as any;
-    return this.mapSeat(snap.id, d);
+    return snap.exists() ? this.mapSeat(snap.id, snap.data()) : null;
   }
 
+  /**
+   * One indexed query across every published exam, then one read per hit for
+   * the exam details. Exams that finished before yesterday are left out.
+   */
   async searchByHallTicket(hallTicketNo: string): Promise<SearchHit[]> {
-    const results: SearchHit[] = [];
     const key = normalizeHallTicket(hallTicketNo);
-    if (!key) return results;
-    const examsSnap = await getDocs(collection(this.firestore, 'publicExams'));
-    for (const examDoc of examsSnap.docs) {
-      const ed = examDoc.data() as any;
-      if (ed['status'] && ed['status'] !== 'published') continue; // skip archived
-      const seatSnap = await getDoc(doc(this.firestore, `publicExams/${examDoc.id}/seats`, key));
-      if (seatSnap.exists()) {
-        const d = seatSnap.data() as any;
-        results.push({
-          examId: examDoc.id,
-          examName: ed['examName'] ?? 'Exam',
-          collegeName: ed['collegeName'] ?? '',
-          subjectCode: ed['subjectCode'] ?? '',
-          date: ed['date'] instanceof Timestamp ? ed['date'].toDate() : (ed['date'] ? new Date(ed['date']) : null),
-          startTime: ed['startTime'] ?? '',
-          endTime: ed['endTime'] ?? '',
-          seat: this.mapSeat(seatSnap.id, d)
-        });
-      }
-    }
-    return results;
+    if (!key) return [];
+    const seats = await getDocs(query(collectionGroup(this.firestore, 'seats'), where('hallTicketNo', '==', key)));
+    const cutoff = new Date(); cutoff.setHours(0, 0, 0, 0); cutoff.setDate(cutoff.getDate() - 1);
+
+    const hits = await Promise.all(seats.docs.map(async seatDoc => {
+      const examRef = seatDoc.ref.parent.parent;
+      if (!examRef) return null;
+      const ed = (await getDoc(examRef)).data() as any;
+      if (!ed || ed['status'] !== 'published') return null;
+      const date = this.toDate(ed['date']);
+      if (date && date < cutoff) return null;
+      return {
+        examId: examRef.id,
+        examName: ed['examName'] ?? 'Exam',
+        collegeName: ed['collegeName'] ?? '',
+        subjectCode: ed['subjectCode'] ?? '',
+        date,
+        startTime: ed['startTime'] ?? '',
+        endTime: ed['endTime'] ?? '',
+        seat: this.mapSeat(key, seatDoc.data())
+      } as SearchHit;
+    }));
+    return hits.filter((h): h is SearchHit => h !== null).sort((a, b) => +(a.date ?? 0) - +(b.date ?? 0));
   }
 
   async getPublicExamMeta(examId: string): Promise<PublicExamMeta | null> {
     const snap = await getDoc(doc(this.firestore, 'publicExams', examId));
     if (!snap.exists()) return null;
     const d = snap.data() as any;
-    if (d['status'] && d['status'] !== 'published') return null;
+    if (d['status'] !== 'published') return null;
     return {
       examName: d['examName'] ?? 'Exam',
       collegeName: d['collegeName'] ?? '',
       subjectCode: d['subjectCode'] ?? '',
-      date: d['date'] instanceof Timestamp ? d['date'].toDate() : (d['date'] ? new Date(d['date']) : null),
+      date: this.toDate(d['date']),
       startTime: d['startTime'] ?? '',
       endTime: d['endTime'] ?? ''
     };
@@ -426,11 +443,8 @@ export class ExamService {
 
   async getPublicExamSeats(examId: string): Promise<PublicSeat[]> {
     const meta = await getDoc(doc(this.firestore, 'publicExams', examId));
-    if (!meta.exists() || (meta.data()['status'] && meta.data()['status'] !== 'published')) return [];
+    if (!meta.exists() || meta.data()['status'] !== 'published') return [];
     const snap = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
-    return snap.docs.map(d => {
-      const data = d.data() as any;
-      return this.mapSeat(d.id, data);
-    });
+    return snap.docs.map(d => this.mapSeat(d.id, d.data()));
   }
 }

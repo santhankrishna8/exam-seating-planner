@@ -27,7 +27,6 @@ import { BRAND } from '../../../brand';
             [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
             <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="17" />
           </button>
-          <a routerLink="/teacher/login" class="nav-link">Invigilators</a>
           <a routerLink="/admin/login" class="btn btn-outline btn-sm">Examination office</a>
         </nav>
       </div>

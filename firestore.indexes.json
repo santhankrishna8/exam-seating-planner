@@ -1,0 +1,13 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "seats",
+      "fieldPath": "hallTicketNo",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION" }
+      ]
+    }
+  ]
+}
