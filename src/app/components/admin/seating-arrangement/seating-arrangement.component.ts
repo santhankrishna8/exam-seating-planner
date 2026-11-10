@@ -169,7 +169,7 @@ interface RoomPlan { room: Room; columns: HallColumn[]; seated: number; benches:
                   </div>
                   <table class="att-table">
                     <thead>
-                      <tr><th>#</th><th>Hall ticket</th><th>Name</th><th>Bench / seat</th><th>Present</th><th>Signature</th></tr>
+                      <tr><th scope="col">#</th><th scope="col">Hall ticket</th><th scope="col">Name</th><th scope="col">Bench / seat</th><th scope="col">Present</th><th scope="col">Signature</th></tr>
                     </thead>
                     <tbody>
                       @for (s of attendanceRoom(plan); track s.hallTicketNo; let i = $index) {

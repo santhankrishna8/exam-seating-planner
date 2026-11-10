@@ -52,13 +52,13 @@ import { BRAND } from '../../../brand';
           <div class="card empty-state"><p>No candidates are seated in this hall.</p></div>
         } @else {
           <div class="ds-bar">
-            <span class="mono"><b class="text-success">{{ students().length - absent().size }}</b> present ·
+            <span class="mono" aria-live="polite"><b class="text-success">{{ students().length - absent().size }}</b> present ·
               <b class="text-danger">{{ absent().size }}</b> absent</span>
             <span class="text-muted">Tap a student to mark absent.</span>
           </div>
           <div class="student-grid">
             @for (s of students(); track s.hallTicketNo) {
-              <button type="button" class="student-chip" [class.absent]="absent().has(s.hallTicketNo)" (click)="toggle(s.hallTicketNo)">
+              <button type="button" class="student-chip" [class.absent]="absent().has(s.hallTicketNo)" [attr.aria-pressed]="absent().has(s.hallTicketNo)" [attr.aria-label]="s.name + ', ' + s.hallTicketNo + ', bench ' + s.benchNumber + ' seat ' + s.seatNumber + (absent().has(s.hallTicketNo) ? ', marked absent' : ', present')" (click)="toggle(s.hallTicketNo)">
                 <span class="sc-ticket mono">{{ s.hallTicketNo }}</span>
                 <span class="sc-name">{{ s.name }}</span>
                 <span class="sc-seat mono">Bench {{ s.benchNumber }} · Seat {{ s.seatNumber }}</span>
@@ -81,7 +81,7 @@ import { BRAND } from '../../../brand';
         <h1>{{ sh.examName }} — {{ sh.roomName }}</h1>
         <p>{{ sh.date | date:'dd MMM yyyy' }} · {{ sh.startTime }}–{{ sh.endTime }} · Invigilator: {{ sh.invigilators.join(', ') || '____________' }}</p>
         <table>
-          <thead><tr><th>#</th><th>Hall ticket</th><th>Name</th><th>Bench/Seat</th><th>Absent</th><th>Signature</th></tr></thead>
+          <thead><tr><th scope="col">#</th><th scope="col">Hall ticket</th><th scope="col">Name</th><th scope="col">Bench/Seat</th><th scope="col">Absent</th><th scope="col">Signature</th></tr></thead>
           <tbody>
             @for (s of students(); track s.hallTicketNo; let i = $index) {
               <tr><td>{{ i + 1 }}</td><td>{{ s.hallTicketNo }}</td><td>{{ s.name }}</td><td>B{{ s.benchNumber }}·S{{ s.seatNumber }}</td>
@@ -102,7 +102,7 @@ import { BRAND } from '../../../brand';
     .ds-inv { margin-top: 6px; font-size: 0.82rem; color: var(--text-muted); }
     .ds-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; font-size: 0.85rem; }
     .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
-    .student-chip { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; text-align: left; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; }
+    .student-chip { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; min-height: 64px; text-align: left; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; }
     .student-chip:hover { border-color: var(--accent-blue); }
     .student-chip.absent { background: color-mix(in oklch, var(--accent-red) 12%, transparent); border-color: color-mix(in oklch, var(--accent-red) 45%, transparent); }
     .student-chip.absent .sc-ticket, .student-chip.absent .sc-name { text-decoration: line-through; opacity: 0.75; }

@@ -273,38 +273,47 @@ export class ExamService {
     const roomInfo = new Map(rooms.map(r => [r.id, r]));
 
     const metaRef = doc(this.firestore, 'publicExams', examId);
-    const meta = {
-      ownerUid: uid,
-      collegeName: college?.name ?? '',
-      collegeCode: college?.code ?? '',
-      examName: exam.name,
-      subjectCode: exam.subjectCode ?? '',
-      date: exam.date,
-      startTime: exam.startTime ?? '',
-      endTime: exam.endTime ?? ''
-    };
-    await writeBatch(this.firestore).set(metaRef, { ...meta, status: exam.status === 'published' ? 'published' : 'pending' }).commit();
+    const wasPublished = exam.status === 'published';
+    try {
+      const meta = {
+        ownerUid: uid,
+        collegeName: college?.name ?? '',
+        collegeCode: college?.code ?? '',
+        examName: exam.name,
+        subjectCode: exam.subjectCode ?? '',
+        date: exam.date,
+        startTime: exam.startTime ?? '',
+        endTime: exam.endTime ?? ''
+      };
+      await writeBatch(this.firestore).set(metaRef, { ...meta, status: exam.status === 'published' ? 'published' : 'pending' }).commit();
 
-    const previous = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
-    const keep = new Set(students.map(s => s.hallTicketNo));
-    await this.inBatches(previous.docs.filter(d => !keep.has(d.id)), (batch, d) => batch.delete(d.ref));
-    await this.inBatches(students, (batch, s) => {
-      const room = roomInfo.get(s.assignedRoom!);
-      batch.set(doc(this.firestore, `publicExams/${examId}/seats`, s.hallTicketNo), {
-        hallTicketNo: s.hallTicketNo,
-        name: s.name,
-        roomId: s.assignedRoom ?? '',
-        roomName: room?.name ?? '',
-        benchNumber: s.assignedBench ?? 0,
-        seatNumber: s.assignedSeat ?? 0,
-        seatsPerBench: room?.seatsPerBench ?? 2,
-        floor: room?.floor ?? ''
+      const previous = await getDocs(collection(this.firestore, `publicExams/${examId}/seats`));
+      const keep = new Set(students.map(s => s.hallTicketNo));
+      await this.inBatches(previous.docs.filter(d => !keep.has(d.id)), (batch, d) => batch.delete(d.ref));
+      await this.inBatches(students, (batch, s) => {
+        const room = roomInfo.get(s.assignedRoom!);
+        batch.set(doc(this.firestore, `publicExams/${examId}/seats`, s.hallTicketNo), {
+          hallTicketNo: s.hallTicketNo,
+          name: s.name,
+          roomId: s.assignedRoom ?? '',
+          roomName: room?.name ?? '',
+          benchNumber: s.assignedBench ?? 0,
+          seatNumber: s.assignedSeat ?? 0,
+          seatsPerBench: room?.seatsPerBench ?? 2,
+          floor: room?.floor ?? ''
+        });
       });
-    });
 
-    await updateDoc(metaRef, { status: 'published' });
-    await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'published' as ExamStatus });
-    await this.syncAttendance({ ...exam, status: 'published' }, usedRooms);
+      await updateDoc(metaRef, { status: 'published' });
+      await updateDoc(doc(this.firestore, `colleges/${uid}/exams`, examId), { status: 'published' as ExamStatus });
+      await this.syncAttendance({ ...exam, status: 'published' }, usedRooms);
+    } catch (e) {
+      // Never leave a half-published exam: withdraw a first publish, or put an
+      // existing one back to live so students keep their seats.
+      if (wasPublished) await updateDoc(metaRef, { status: 'published' }).catch(() => {});
+      else await this.unpublishExam(examId).catch(() => {});
+      throw e;
+    }
   }
 
   /** Keeps the invigilators' attendance links in step with the exam. */

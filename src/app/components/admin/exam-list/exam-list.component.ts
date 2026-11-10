@@ -70,13 +70,13 @@ type Filter = '' | ExamStatus;
                 <table>
                   <thead>
                     <tr>
-                      <th>Examination</th>
-                      <th>Date</th>
-                      <th>Session</th>
-                      <th>Halls</th>
-                      <th>Allotment</th>
-                      <th>Status</th>
-                      <th class="text-right">Action</th>
+                      <th scope="col">Examination</th>
+                      <th scope="col">Date</th>
+                      <th scope="col">Session</th>
+                      <th scope="col">Halls</th>
+                      <th scope="col">Allotment</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" class="text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody>

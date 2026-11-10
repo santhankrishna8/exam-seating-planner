@@ -98,12 +98,12 @@ interface DutyRow {
               <table>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Contact</th>
-                    <th>Duties</th>
-                    <th>Status</th>
-                    <th class="text-right">Actions</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Department</th>
+                    <th scope="col">Contact</th>
+                    <th scope="col">Duties</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -158,7 +158,7 @@ interface DutyRow {
             <div class="table-wrapper card">
               <table>
                 <thead>
-                  <tr><th>Teacher</th><th>Exam</th><th>Room</th><th>Date</th><th>Time</th></tr>
+                  <tr><th scope="col">Teacher</th><th scope="col">Exam</th><th scope="col">Room</th><th scope="col">Date</th><th scope="col">Time</th></tr>
                 </thead>
                 <tbody>
                   @for (d of filteredDuties(); track $index) {

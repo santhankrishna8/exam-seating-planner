@@ -104,9 +104,9 @@ type DialogKind = '' | 'publish' | 'unpublish' | 'delete' | 'replace';
               @if (students().length) {
                 <div class="table-wrapper">
                   <table>
-                    <thead><tr><th>Hall ticket</th><th>Name</th><th>Dept</th>
-                      @if (seatingGenerated()) { <th>Hall</th><th>Bench</th><th>Seat</th> }
-                      @if (published()) { <th>Attendance</th> }</tr></thead>
+                    <thead><tr><th scope="col">Hall ticket</th><th scope="col">Name</th><th scope="col">Dept</th>
+                      @if (seatingGenerated()) { <th scope="col">Hall</th><th scope="col">Bench</th><th scope="col">Seat</th> }
+                      @if (published()) { <th scope="col">Attendance</th> }</tr></thead>
                     <tbody>
                       @for (s of visibleStudents(); track s.hallTicketNo) {
                         <tr [class.unseated]="seatingGenerated() && !s.isSeated">
@@ -259,7 +259,7 @@ type DialogKind = '' | 'publish' | 'unpublish' | 'delete' | 'replace';
               } @else {
                 <div class="table-wrapper">
                   <table>
-                    <thead><tr><th>Hall</th><th>Invigilator(s)</th>@if (published()) { <th>Attendance</th><th></th> }</tr></thead>
+                    <thead><tr><th scope="col">Hall</th><th scope="col">Invigilator(s)</th>@if (published()) { <th scope="col">Attendance</th><th scope="col"><span class="sr-only">Actions</span></th> }</tr></thead>
                     <tbody>
                       @for (row of dutyRows(); track row.room.id) {
                         <tr>

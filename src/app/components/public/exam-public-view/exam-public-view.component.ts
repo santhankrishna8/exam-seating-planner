@@ -51,10 +51,10 @@ import { PublicSeat } from '../../../models/student.model';
                 <table>
                   <thead>
                     <tr>
-                      <th>Hall Ticket</th>
-                      <th>Name</th>
-                      <th>Bench</th>
-                      <th>Seat</th>
+                      <th scope="col">Hall Ticket</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Bench</th>
+                      <th scope="col">Seat</th>
                     </tr>
                   </thead>
                   <tbody>
